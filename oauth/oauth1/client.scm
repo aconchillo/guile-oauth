@@ -28,4 +28,109 @@
 ;;; Code:
 
 (define-module (oauth oauth1 client)
-  #:use-module (web uri))
+  #:use-module (oauth oauth1 request)
+  #:use-module (oauth oauth1 utils)
+  #:use-module (ice-9 format)
+  #:use-module (ice-9 receive)
+  #:use-module (gnutls)
+  #:use-module (rnrs bytevectors)
+  #:use-module (srfi srfi-9)
+  #:use-module (web client)
+  #:use-module (web uri)
+  #:use-module (weinholt crypto sha-1)
+  #:use-module (weinholt text base64)
+  #:export (oauth1-client
+            oauth1-client?
+            oauth1-client-consumer-key
+            oauth1-client-consumer-secret
+            oauth1-client-request-token))
+
+(define VERSION "1.0")
+
+(define-record-type <oauth1-client>
+  (make-oauth1-client name
+                      consumer-key
+                      consumer-secret)
+  oauth1-client?
+  (name oauth1-client-name)
+  (consumer-key oauth1-client-consumer-key)
+  (consumer-secret oauth1-client-consumer-secret))
+
+(define (oauth1-client name consumer-key consumer-secret)
+  (make-oauth1-client name consumer-key consumer-secret))
+
+(define* (http-oauth-post uri #:key (headers '()))
+  (let* ((socket (open-socket-for-uri uri))
+         (session (make-session connection-end/client)))
+
+  (set-log-level! 0)
+
+  (set-log-procedure!
+   (lambda (level msg) (format #t "|<~d>| ~a" level msg)))
+
+  ;; Use the file 8descriptor that underlies SOCKET.
+  (set-session-transport-fd! session (fileno socket))
+
+  ;; Use the default settings.
+  (set-session-priorities! session "NORMAL")
+
+  ;; Create anonymous credentials.
+  (set-session-credentials! session
+                            (make-anonymous-client-credentials))
+  (set-session-credentials! session
+                            (make-certificate-credentials))
+
+  ;; Perform the TLS handshake with the server.
+  (handshake session)
+
+  (receive (response body)
+      (http-post uri
+                 #:port (session-record-port session)
+                 #:keep-alive? #t
+                 #:headers headers)
+    (bye session close-request/rdwr)
+    (values response body))))
+
+(define (hmac-sha1-signature client request)
+  (let* ((method (oauth1-request-method request))
+         (uri (string->uri (oauth1-request-url request)))
+         (params (oauth1-request-params request))
+         (base-string (oauth1-signature-base-string method uri params))
+         (key (oauth1-client-consumer-secret client)))
+    (pk base-string)
+    (base64-encode
+     (sha-1->bytevector (hmac-sha-1 (string->utf8 key)
+                                    (string->utf8 base-string))))))
+
+(define* (oauth1-client-request-token client request
+                                      #:optional (callback "oob"))
+  (let* ((url (oauth1-request-url request))
+         (uri (string->uri url)))
+    (oauth1-request-set-default-params request)
+    ;(oauth1-request-add-param request 'oauth_callback callback)
+    (oauth1-request-add-param request
+                              'oauth_consumer_key
+                              (oauth1-client-consumer-key client))
+    (oauth1-request-add-param request
+                              'oauth_signature
+                              (hmac-sha1-signature client request))
+    (pk (oauth1-request-params request))))
+
+;; (receive (response body)
+;;         (http-oauth-post uri #:headers (oauth1-request-header request))
+;;       (pk body))
+
+(define twitter-request-token-request
+  (oauth1-request "https://api.twitter.com/oauth/request_token"))
+
+(define twitter-access-token-request
+  (oauth1-request "https://api.twitter.com/oauth/access_token"))
+
+(define twitter-authorize-request
+  (oauth1-request "https://api.twitter.com/oauth/authorize"
+                  #:method 'GET))
+
+(define twitter
+  (oauth1-client "twitter"
+                 "KigSurHqMlLyuZVTPp3XXQ"
+                 "LC2lNIe7hUJ4AXPTd4Uxh309LbWLARdS2NcrZrRabY"))

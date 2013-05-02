@@ -21,7 +21,7 @@
 
 moddir=$(prefix)/share/guile/site/oauth/oauth1
 
-SOURCES = client.scm
+SOURCES = client.scm request.scm utils.scm
 
 GOBJECTS = $(SOURCES:%.scm=%.go)
 
