@@ -119,18 +119,3 @@
 ;; (receive (response body)
 ;;         (http-oauth-post uri #:headers (oauth1-request-header request))
 ;;       (pk body))
-
-(define twitter-request-token-request
-  (oauth1-request "https://api.twitter.com/oauth/request_token"))
-
-(define twitter-access-token-request
-  (oauth1-request "https://api.twitter.com/oauth/access_token"))
-
-(define twitter-authorize-request
-  (oauth1-request "https://api.twitter.com/oauth/authorize"
-                  #:method 'GET))
-
-(define twitter
-  (oauth1-client "twitter"
-                 "KigSurHqMlLyuZVTPp3XXQ"
-                 "LC2lNIe7hUJ4AXPTd4Uxh309LbWLARdS2NcrZrRabY"))
