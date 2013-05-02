@@ -25,14 +25,11 @@ AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([color-tests -Wall -Wno-portability])
 AM_SILENT_RULES([yes])
 
-GUILE_PROGS
+GUILE_PKG([2.0])
 
-if $GUILE_TOOLS | grep -q compile; then
-   # everything cool
-   true
-else
-   AC_MSG_ERROR([Guile 2.0 required.])
-fi
+GUILE_MODULE_REQUIRED([gnutls])
+GUILE_MODULE_REQUIRED([weinholt crypto sha-1])
+GUILE_MODULE_REQUIRED([weinholt text base64])
 
 AC_CONFIG_FILES([Makefile
                  oauth/Makefile
