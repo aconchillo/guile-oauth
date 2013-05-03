@@ -34,13 +34,10 @@
             oauth1-nonce
             oauth1-normalized-params
             oauth1-normalized-header-params
-            oauth1-signature-base-string))
+            string->oauth1-token-params))
 
 (define (oauth1-timestamp)
   (date->string (current-date) "~s"))
-
-(define random-alphabet
-  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 
 (define (oauth1-nonce)
   (date->string (current-date) "~s"))
@@ -72,29 +69,10 @@
         params)
    ", "))
 
-(define (standard-port? uri)
-  (or (not (uri-port uri))
-      (and (eq? 'http (uri-scheme uri))
-           (= 80 (uri-port uri)))
-      (and (eq? 'https (uri-scheme uri))
-           (= 443 (uri-port uri)))))
-
-(define (port->string uri)
-  (if (standard-port? uri)
-      ""
-      (string-append ":" (number->string (uri-port uri)))))
-
-(define (signature-request-url uri)
-  (string-append (symbol->string (uri-scheme uri))
-                 "://"
-                 (uri-host uri)
-                 (port->string uri)
-                 (uri-path uri)))
-
-(define (oauth1-signature-base-string method uri params)
-  (string-join
-   (map (lambda (p) (uri-encode p))
-        (list (symbol->string method)
-              (signature-request-url uri)
-              (oauth1-normalized-params params)))
-   "&"))
+(define (string->oauth1-token-params str)
+  (map
+   (lambda (param)
+     (let ((pair (string-split param #\=)))
+       (cons (string->symbol (car pair))
+             (car (cdr pair)))))
+   (string-split str #\&)))
