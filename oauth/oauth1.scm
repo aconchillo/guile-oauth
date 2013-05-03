@@ -32,6 +32,7 @@
   #:use-module (oauth oauth1 oauth)
   #:use-module (oauth oauth1 request)
   #:use-module (oauth oauth1 signature)
+  #:use-module (oauth oauth1 token)
   #:use-module (oauth oauth1 utils))
 
 (define-syntax re-export-modules
@@ -46,6 +47,7 @@
                    (oauth oauth1 oauth)
                    (oauth oauth1 request)
                    (oauth oauth1 signature)
+                   (oauth oauth1 token)
                    (oauth oauth1 utils))
 
 ;;; (oauth) ends here

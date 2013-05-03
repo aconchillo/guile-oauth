@@ -30,6 +30,7 @@
 (define-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 client)
   #:use-module (oauth oauth1 request)
+  #:use-module (oauth oauth1 token)
   #:use-module (oauth oauth1 utils)
   #:use-module (rnrs bytevectors)
   #:use-module (srfi srfi-9)
@@ -79,14 +80,14 @@
                 (oauth1-normalized-params params)))
      "&")))
 
-(define (hmac-sha1-key client token-secret)
+(define (hmac-sha1-key client token)
   (string-append (uri-encode (oauth1-client-secret client))
                  "&"
-                 (uri-encode token-secret)))
+                 (uri-encode (oauth1-token-secret token))))
 
-(define (hmac-sha1-signature client request token-secret)
+(define (hmac-sha1-signature client request token)
   (let* ((base-string (hmac-sha1-signature-base-string request))
-         (key (hmac-sha1-key client token-secret)))
+         (key (hmac-sha1-key client token)))
     (base64-encode
      (sha-1->bytevector (hmac-sha-1 (string->utf8 key)
                                     (string->utf8 base-string))))))
@@ -97,14 +98,14 @@
 (define oauth1a-signature-hmac-sha1
   (oauth1-signature
    "HMAC-SHA1"
-   (lambda (client request token-secret)
-     (uri-encode (hmac-sha1-signature client request token-secret)))))
+   (lambda (client request token)
+     (uri-encode (hmac-sha1-signature client request token)))))
 
-(define (oauth1-signature-sign-request signature client request token-secret)
+(define (oauth1-signature-sign-request signature client request token)
   (let ((proc (oauth1-signature-proc signature)))
     (oauth1-request-add-param request
                               'oauth_signature_method
                               (oauth1-signature-method signature))
     (oauth1-request-add-param request
                               'oauth_signature
-                              (proc client request token-secret))))
+                              (proc client request token))))

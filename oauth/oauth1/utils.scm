@@ -33,8 +33,7 @@
   #:export (oauth1-timestamp
             oauth1-nonce
             oauth1-normalized-params
-            oauth1-normalized-header-params
-            string->oauth1-token-params))
+            oauth1-normalized-header-params))
 
 (define (oauth1-timestamp)
   (date->string (current-date) "~s"))
@@ -68,11 +67,3 @@
                                    "=\"" (cdr p) "\""))
         params)
    ", "))
-
-(define (string->oauth1-token-params str)
-  (map
-   (lambda (param)
-     (let ((pair (string-split param #\=)))
-       (cons (string->symbol (car pair))
-             (car (cdr pair)))))
-   (string-split str #\&)))

@@ -31,31 +31,20 @@
   #:use-module (oauth oauth1 client)
   #:use-module (oauth oauth1 request)
   #:use-module (oauth oauth1 signature)
+  #:use-module (oauth oauth1 token)
   #:use-module (oauth oauth1 utils)
   #:use-module (ice-9 receive)
   #:use-module (web uri)
-  #:export (oauth1-params-token
-            oauth1-params-token-secret
-            oauth1-params-callback-confirmed
-            oauth1-request-token
+  #:export (oauth1-request-token
             oauth1-authorize-token
             oauth1-access-token))
-
-(define (oauth1-params-token params)
-  (assq-ref params 'oauth_token))
-
-(define (oauth1-params-token-secret params)
-  (assq-ref params 'oauth_token_secret))
-
-(define (oauth1-params-callback-confirmed params)
-  (assq-ref params 'oauth_callback_confirmed))
 
 (define* (oauth1-request-token client
                                #:optional (callback "oob")
                                #:key
                                (method 'POST)
                                (params '())
-                               (signature oauth1-signature-hmac-sha1))
+                               (signature oauth1a-signature-hmac-sha1))
   (let* ((url (oauth1-client-request-token-url client))
          (request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
@@ -65,7 +54,7 @@
                               'oauth_consumer_key
                               (oauth1-client-key client))
     (oauth1-signature-sign-request signature
-                                   client request "")
+                                   client request (oauth1-token "" ""))
     (receive (response body)
         (oauth1-http-request request)
       (string->oauth1-token-params body))))
@@ -76,38 +65,41 @@
   (let* ((url (oauth1-client-authorize-token-url client))
          (request (oauth1-request url #:method 'GET #:params params)))
     (when token
-      (oauth1-request-add-param request 'oauth_token token))
+      (oauth1-request-add-param request
+                                'oauth_token (oauth1-token-token token)))
     (oauth1-request-http-url request)))
 
-(define* (oauth1-access-token client token token-secret verifier
+(define* (oauth1-access-token client token verifier
                               #:key
                               (method 'POST)
-                              (signature oauth1-signature-hmac-sha1))
+                              (signature oauth1a-signature-hmac-sha1))
   (let* ((url (oauth1-client-access-token-url client))
          (request (oauth1-request url #:method method)))
     (oauth1-request-add-default-params request)
-    (oauth1-request-add-param request 'oauth_token token)
+    (oauth1-request-add-param request
+                              'oauth_token
+                              (oauth1-token-token token))
     (oauth1-request-add-param request 'oauth_verifier verifier)
     (oauth1-request-add-param request
                               'oauth_consumer_key
                               (oauth1-client-key client))
-    (oauth1-signature-sign-request signature
-                                   client request token-secret)
+    (oauth1-signature-sign-request signature client request token)
     (receive (response body)
         (oauth1-http-request request)
       (string->oauth1-token-params body))))
 
-(define* (oauth1-protected-http-headers client url token token-secret
+(define* (oauth1-protected-http-headers client url token
                                         #:key
                                         (params '())
                                         (signature oauth1-signature-hmac-sha1))
   (let ((request (oauth1-request url)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-params request params)
-    (oauth1-request-add-param request 'oauth_token token)
+    (oauth1-request-add-param request
+                              'oauth_token
+                              (oauth1-token-token token))
     (oauth1-request-add-param request
                               'oauth_consumer_key
                               (oauth1-client-key client))
-    (oauth1-signature-sign-request signature
-                                   client request token-secret)
+    (oauth1-signature-sign-request signature client request token)
     (oauth1-request-http-headers request)))

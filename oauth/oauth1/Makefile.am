@@ -26,6 +26,7 @@ SOURCES = \
   oauth.scm \
   request.scm \
   signature.scm \
+  token.scm \
   utils.scm \
   #
 

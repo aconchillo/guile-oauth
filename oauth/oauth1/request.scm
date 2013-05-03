@@ -91,6 +91,37 @@
          (norm-params (oauth1-normalized-params params)))
     (string-append url (if (null? params) "" "?") norm-params)))
 
+(define* (https-get uri #:key (headers '()))
+  (let* ((socket (open-socket-for-uri uri))
+         (session (make-session connection-end/client)))
+
+    ;; (set-log-level! 9)
+    ;; (set-log-procedure!
+    ;;  (lambda (level msg) (format #t "|<~d>| ~a" level msg)))
+
+    ;; Use the file descriptor that underlies SOCKET.
+    (set-session-transport-fd! session (fileno socket))
+
+    ;; Use the default settings.
+    (set-session-priorities! session "NORMAL")
+
+    ;; Create anonymous credentials.
+    (set-session-credentials! session
+                              (make-anonymous-client-credentials))
+    (set-session-credentials! session
+                              (make-certificate-credentials))
+
+    ;; Perform the TLS handshake with the server.
+    (handshake session)
+
+    (receive (response body)
+        (http-get uri
+                   #:port (session-record-port session)
+                   #:keep-alive? #t
+                   #:headers headers)
+      (bye session close-request/rdwr)
+      (values response body))))
+
 (define* (https-post uri #:key (headers '()))
   (let* ((socket (open-socket-for-uri uri))
          (session (make-session connection-end/client)))
@@ -122,6 +153,13 @@
       (bye session close-request/rdwr)
       (values response body))))
 
+(define* (oauth1-http-get request)
+  (let ((uri (string->uri (oauth1-request-url request)))
+        (headers (oauth1-request-http-headers request)))
+    (if (eq? (uri-scheme uri) 'http)
+      (http-get uri #:headers headers)
+      (https-get uri #:headers headers))))
+
 (define* (oauth1-http-post request)
   (let ((uri (string->uri (oauth1-request-url request)))
         (headers (oauth1-request-http-headers request)))
@@ -132,5 +170,6 @@
 (define* (oauth1-http-request request)
   (let ((method (oauth1-request-method request)))
     (case method
+      ((GET) (oauth1-http-get request))
       ((POST) (oauth1-http-post request))
       (else throw 'oauth-invalid-method))))
