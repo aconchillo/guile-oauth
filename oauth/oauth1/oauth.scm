@@ -82,7 +82,7 @@
 (define* (oauth1-access-token client token token-secret verifier
                               #:key
                               (method 'POST)
-                              (signature oauth1a-signature-hmac-sha1))
+                              (signature oauth1-signature-hmac-sha1))
   (let* ((url (oauth1-client-access-token-url client))
          (request (oauth1-request url #:method method)))
     (oauth1-request-add-default-params request)
