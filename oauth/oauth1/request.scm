@@ -95,33 +95,32 @@
   (let* ((socket (open-socket-for-uri uri))
          (session (make-session connection-end/client)))
 
-  (set-log-level! 9)
+    ;; (set-log-level! 9)
+    ;; (set-log-procedure!
+    ;;  (lambda (level msg) (format #t "|<~d>| ~a" level msg)))
 
-  (set-log-procedure!
-   (lambda (level msg) (format #t "|<~d>| ~a" level msg)))
+    ;; Use the file descriptor that underlies SOCKET.
+    (set-session-transport-fd! session (fileno socket))
 
-  ;; Use the file 8descriptor that underlies SOCKET.
-  (set-session-transport-fd! session (fileno socket))
+    ;; Use the default settings.
+    (set-session-priorities! session "NORMAL")
 
-  ;; Use the default settings.
-  (set-session-priorities! session "NORMAL")
+    ;; Create anonymous credentials.
+    (set-session-credentials! session
+                              (make-anonymous-client-credentials))
+    (set-session-credentials! session
+                              (make-certificate-credentials))
 
-  ;; Create anonymous credentials.
-  (set-session-credentials! session
-                            (make-anonymous-client-credentials))
-  (set-session-credentials! session
-                            (make-certificate-credentials))
+    ;; Perform the TLS handshake with the server.
+    (handshake session)
 
-  ;; Perform the TLS handshake with the server.
-  (handshake session)
-
-  (receive (response body)
-      (http-post uri
-                 #:port (session-record-port session)
-                 #:keep-alive? #t
-                 #:headers headers)
-    (bye session close-request/rdwr)
-    (values response body))))
+    (receive (response body)
+        (http-post uri
+                   #:port (session-record-port session)
+                   #:keep-alive? #t
+                   #:headers headers)
+      (bye session close-request/rdwr)
+      (values response body))))
 
 (define* (oauth1-http-post request)
   (let ((uri (string->uri (oauth1-request-url request)))
