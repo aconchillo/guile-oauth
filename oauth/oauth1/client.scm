@@ -40,6 +40,7 @@
             oauth1-signature-method
             oauth1-signature-proc
             oauth1-signature-hmac-sha1
+            oauth1-signature-plaintext
             oauth1-client
             oauth1-client?
             oauth1-client-name
@@ -84,6 +85,15 @@
    "HMAC-SHA1"
    (lambda (client request token)
      (uri-encode (base64-encode (hmac-sha1-signature client request token))))))
+
+(define (plaintext-signature client token)
+  (hmac-sha1-key client token))
+
+(define oauth1-signature-plaintext
+  (oauth1-signature
+   "PLAINTEXT"
+   (lambda (client request token)
+     (uri-encode (plaintext-signature client token)))))
 
 (define* (oauth1-client name key secret request auth access
                         #:key (signature oauth1-signature-hmac-sha1))
