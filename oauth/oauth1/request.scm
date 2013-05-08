@@ -45,6 +45,7 @@
             oauth1-request-add-params
             oauth1-request-http-headers
             oauth1-request-http-url
+            oauth1-request-signature-base-string
             oauth1-http-request))
 
 (define VERSION "1.0")
@@ -90,6 +91,36 @@
          (params (oauth1-request-params request))
          (norm-params (oauth1-normalized-params params)))
     (string-append url (if (null? params) "" "?") norm-params)))
+
+(define (standard-port? uri)
+  (or (not (uri-port uri))
+      (and (eq? 'http (uri-scheme uri))
+           (= 80 (uri-port uri)))
+      (and (eq? 'https (uri-scheme uri))
+           (= 443 (uri-port uri)))))
+
+(define (port->string uri)
+  (if (standard-port? uri)
+      ""
+      (string-append ":" (number->string (uri-port uri)))))
+
+(define (signature-request-url uri)
+  (string-append (symbol->string (uri-scheme uri))
+                 "://"
+                 (uri-host uri)
+                 (port->string uri)
+                 (uri-path uri)))
+
+(define (oauth1-request-signature-base-string request)
+  (let ((method (oauth1-request-method request))
+        (uri (string->uri (oauth1-request-url request)))
+        (params (oauth1-request-params request)))
+    (string-join
+     (map (lambda (p) (uri-encode p))
+          (list (symbol->string method)
+                (signature-request-url uri)
+                (oauth1-normalized-params params)))
+     "&")))
 
 (define* (https-get uri #:key (headers '()))
   (let* ((socket (open-socket-for-uri uri))

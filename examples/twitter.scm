@@ -165,8 +165,7 @@
     (oauth1-request-add-param request
                               'oauth_consumer_key
                               (oauth1-client-key *twitter*))
-    (oauth1-signature-sign-request oauth1a-signature-hmac-sha1
-                                   *twitter* request *access-token*)
+    (oauth1-client-sign-request *twitter* request *access-token*)
     (receive (response body)
         (oauth1-http-request request)
       (twitter-timeline-html (utf8->string body)))))

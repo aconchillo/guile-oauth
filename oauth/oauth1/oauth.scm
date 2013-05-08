@@ -30,7 +30,6 @@
 (define-module (oauth oauth1 oauth)
   #:use-module (oauth oauth1 client)
   #:use-module (oauth oauth1 request)
-  #:use-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 token)
   #:use-module (oauth oauth1 utils)
   #:use-module (ice-9 receive)
@@ -41,10 +40,7 @@
 
 (define* (oauth1-request-token client
                                #:optional (callback "oob")
-                               #:key
-                               (method 'POST)
-                               (params '())
-                               (signature oauth1a-signature-hmac-sha1))
+                               #:key (method 'POST) (params '()))
   (let* ((url (oauth1-client-request-token-url client))
          (request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
@@ -53,8 +49,7 @@
     (oauth1-request-add-param request
                               'oauth_consumer_key
                               (oauth1-client-key client))
-    (oauth1-signature-sign-request signature
-                                   client request (oauth1-token "" ""))
+    (oauth1-client-sign-request client request (oauth1-token "" ""))
     (receive (response body)
         (oauth1-http-request request)
       (string->oauth1-token-params body))))
@@ -70,9 +65,7 @@
     (oauth1-request-http-url request)))
 
 (define* (oauth1-access-token client token verifier
-                              #:key
-                              (method 'POST)
-                              (signature oauth1a-signature-hmac-sha1))
+                              #:key (method 'POST))
   (let* ((url (oauth1-client-access-token-url client))
          (request (oauth1-request url #:method method)))
     (oauth1-request-add-default-params request)
@@ -83,15 +76,13 @@
     (oauth1-request-add-param request
                               'oauth_consumer_key
                               (oauth1-client-key client))
-    (oauth1-signature-sign-request signature client request token)
+    (oauth1-client-sign-request client request token)
     (receive (response body)
         (oauth1-http-request request)
       (string->oauth1-token-params body))))
 
 (define* (oauth1-protected-http-headers client url token
-                                        #:key
-                                        (params '())
-                                        (signature oauth1-signature-hmac-sha1))
+                                        #:key (params '()))
   (let ((request (oauth1-request url)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-params request params)
@@ -101,5 +92,5 @@
     (oauth1-request-add-param request
                               'oauth_consumer_key
                               (oauth1-client-key client))
-    (oauth1-signature-sign-request signature client request token)
+    (oauth1-client-sign-request client request token)
     (oauth1-request-http-headers request)))
