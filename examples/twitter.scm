@@ -133,7 +133,7 @@
           (lambda (port) #nil)))
 
 (define (twitter-access-handler request body)
-  (let* ((location "http://localhost:8080/twitter/timeline")
+  (let* ((location "http://localhost:8080/twitter/home_timeline")
          (verifier (request-query-ref request "oauth_verifier"))
          (access-params (oauth1-access-token *twitter* *request-token* verifier)))
     (set! *access-token* (oauth1-token-params->token access-params))
@@ -148,6 +148,12 @@
     `(html
       (head (title ,title))
       (body
+       "(" (a (@ (href "http://localhost:8080/twitter/home_timeline"))
+              "Home timeline")
+       ") "
+       "(" (a (@ (href "http://localhost:8080/twitter/user_timeline"))
+              "User timeline")
+       ") "
        ,(map
          (lambda (tweet)
            (let ((user (hash-ref tweet "user")))
@@ -155,9 +161,8 @@
                  ,(hash-ref tweet "text"))))
          tweets)))))
 
-(define (twitter-timeline request body)
-  (let* ((timeline "http://api.twitter.com/1.1/statuses/home_timeline.json")
-         (request (oauth1-request timeline #:method 'GET)))
+(define (twitter-timeline url request body)
+  (let ((request (oauth1-request url #:method 'GET)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request
                               'oauth_token
@@ -170,12 +175,27 @@
         (oauth1-http-request request)
       (twitter-timeline-html (utf8->string body)))))
 
-(define (twitter-timeline-handler request body)
-  (values (build-response
-           #:headers '((content-type . (text/html))))
-          (lambda (port)
-            (display xhtml-doctype port)
-            (sxml->xml (twitter-timeline request body) port))))
+(define (twitter-tweets-handler timeline)
+  (lambda (request body)
+    (values
+     (build-response #:headers '((content-type . (text/html))))
+     (lambda (port)
+       (display xhtml-doctype port)
+       (sxml->xml (timeline request body) port)))))
+
+(define (twitter-user-timeline request body)
+  (twitter-timeline "http://api.twitter.com/1.1/statuses/user_timeline.json"
+                    request body))
+
+(define twitter-user-timeline-handler
+  (twitter-tweets-handler twitter-user-timeline))
+
+(define (twitter-home-timeline request body)
+  (twitter-timeline "http://api.twitter.com/1.1/statuses/home_timeline.json"
+                    request body))
+
+(define twitter-home-timeline-handler
+  (twitter-tweets-handler twitter-home-timeline))
 
 ;; Build a resource not found (404) response
 (define (not-found request)
@@ -199,9 +219,12 @@
    ;; /twitter/access
    ((equal? (request-path-components request) '("twitter" "access"))
     (twitter-access-handler request body))
-   ;; /twitter/timeline
-   ((equal? (request-path-components request) '("twitter" "timeline"))
-    (twitter-timeline-handler request body))
+   ;; /twitter/home_timeline
+   ((equal? (request-path-components request) '("twitter" "home_timeline"))
+    (twitter-home-timeline-handler request body))
+   ;; /twitter/user_timeline
+   ((equal? (request-path-components request) '("twitter" "user_timeline"))
+    (twitter-user-timeline-handler request body))
    ;; Resource not found (404)
    (else (not-found request))))
 
