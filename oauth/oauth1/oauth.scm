@@ -5,21 +5,19 @@
 ;; This file is part of guile-oauth.
 ;;
 ;; guile-oauth is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3 of
-;; the License, or (at your option) any later version.
+;; modify it under the terms of the GNU Lesser General Public
+;; License as published by the Free Software Foundation; either
+;; version 3 of the License, or (at your option) any later version.
 ;;
 ;; guile-oauth is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; Lesser General Public License for more details.
 ;;
-;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, contact:
-;;
-;; Free Software Foundation           Voice:  +1-617-542-5942
-;; 59 Temple Place - Suite 330        Fax:    +1-617-542-2652
-;; Boston, MA  02111-1307,  USA       gnu@gnu.org
+;; You should have received a copy of the GNU Lesser General Public
+;; License along with guile-oauth; if not, write to the Free Software
+;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+;; 02110-1301 USA
 
 ;;; Commentary:
 
@@ -44,11 +42,9 @@
   (let* ((url (oauth1-client-request-token-url client))
          (request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
-    (oauth1-request-add-param request
-                              'oauth_callback callback)
-    (oauth1-request-add-param request
-                              'oauth_consumer_key
-                              (oauth1-client-key client))
+    (oauth1-request-add-params request
+                               `((oauth_callback ,callback)
+                                 (oauth_consumer_key ,(oauth1-client-key client))))
     (oauth1-client-sign-request client request (oauth1-token "" ""))
     (receive (response body)
         (oauth1-http-request request)
@@ -69,13 +65,10 @@
   (let* ((url (oauth1-client-access-token-url client))
          (request (oauth1-request url #:method method)))
     (oauth1-request-add-default-params request)
-    (oauth1-request-add-param request
-                              'oauth_token
-                              (oauth1-token-token token))
-    (oauth1-request-add-param request 'oauth_verifier verifier)
-    (oauth1-request-add-param request
-                              'oauth_consumer_key
-                              (oauth1-client-key client))
+    (oauth1-request-add-params request
+                               `((oauth_token ,(oauth1-token-token token))
+                                 (oauth_verifier ,verifier)
+                                 (oauth_consumer_key) (oauth1-client-key client)))
     (oauth1-client-sign-request client request token)
     (receive (response body)
         (oauth1-http-request request)
@@ -86,11 +79,8 @@
   (let ((request (oauth1-request url)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-params request params)
-    (oauth1-request-add-param request
-                              'oauth_token
-                              (oauth1-token-token token))
-    (oauth1-request-add-param request
-                              'oauth_consumer_key
-                              (oauth1-client-key client))
+    (oauth1-request-add-params request
+                               `((oauth_token ,(oauth1-token-token token))
+                                 (oauth_consumer_key ,(oauth1-client-key client))))
     (oauth1-client-sign-request client request token)
     (oauth1-request-http-headers request)))

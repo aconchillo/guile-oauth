@@ -1,4 +1,4 @@
-#!/usr/local/bin/guile -s
+#!/usr//bin/env guile
 !#
 
 ;;; Guile OAuth client example.
@@ -7,22 +7,20 @@
 ;;
 ;; This file is part of guile-oauth.
 ;;
-;; guile-xmlrpc is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3 of
-;; the License, or (at your option) any later version.
+;; guile-oauth is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU Lesser General Public
+;; License as published by the Free Software Foundation; either
+;; version 3 of the License, or (at your option) any later version.
 ;;
-;; guile-xmlrpc is distributed in the hope that it will be useful,
+;; guile-oauth is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; Lesser General Public License for more details.
 ;;
-;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, contact:
-;;
-;; Free Software Foundation           Voice:  +1-617-542-5942
-;; 59 Temple Place - Suite 330        Fax:    +1-617-542-2652
-;; Boston, MA  02111-1307,  USA       gnu@gnu.org
+;; You should have received a copy of the GNU Lesser General Public
+;; License along with guile-oauth; if not, write to the Free Software
+;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+;; 02110-1301 USA
 
 ;;; Commentary:
 
@@ -230,8 +228,8 @@
 
 (display "\nNow go to http://localhost:8080/twitter\n")
 
-;; We start the server. (main-handler) is be called every time a request
-;; is received.
+;; We start the server. (main-handler) will be called every time a
+;; request is received.
 (run-server main-handler)
 
 ;;; code ends here
