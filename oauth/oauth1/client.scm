@@ -106,5 +106,3 @@
     (oauth1-request-add-param request
                               'oauth_signature
                               (proc client request token))))
-
-(define (oauth1-server-verify-request request token))
