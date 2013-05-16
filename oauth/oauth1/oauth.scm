@@ -43,8 +43,8 @@
          (request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-params request
-                               `((oauth_callback ,callback)
-                                 (oauth_consumer_key ,(oauth1-client-key client))))
+                               `((oauth_callback . ,callback)
+                                 (oauth_consumer_key . ,(oauth1-client-key client))))
     (oauth1-client-sign-request client request (oauth1-token "" ""))
     (receive (response body)
         (oauth1-http-request request)
@@ -66,9 +66,9 @@
          (request (oauth1-request url #:method method)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-params request
-                               `((oauth_token ,(oauth1-token-token token))
-                                 (oauth_verifier ,verifier)
-                                 (oauth_consumer_key) (oauth1-client-key client)))
+                               `((oauth_token . ,(oauth1-token-token token))
+                                 (oauth_verifier . ,verifier)
+                                 (oauth_consumer_key . ,(oauth1-client-key client))))
     (oauth1-client-sign-request client request token)
     (receive (response body)
         (oauth1-http-request request)
@@ -80,7 +80,7 @@
     (oauth1-request-add-default-params request)
     (oauth1-request-add-params request params)
     (oauth1-request-add-params request
-                               `((oauth_token ,(oauth1-token-token token))
-                                 (oauth_consumer_key ,(oauth1-client-key client))))
+                               `((oauth_token . ,(oauth1-token-token token))
+                                 (oauth_consumer_key . ,(oauth1-client-key client))))
     (oauth1-client-sign-request client request token)
     (oauth1-request-http-headers request)))
