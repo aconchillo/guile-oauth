@@ -29,8 +29,8 @@
 
 (define-module (oauth oauth1)
   #:use-module (oauth oauth1 client)
-  #:use-module (oauth oauth1 oauth)
   #:use-module (oauth oauth1 request)
+  #:use-module (oauth oauth1 service)
   #:use-module (oauth oauth1 token)
   #:use-module (oauth oauth1 utils))
 
@@ -43,8 +43,8 @@
        ...))))
 
 (re-export-modules (oauth oauth1 client)
-                   (oauth oauth1 oauth)
                    (oauth oauth1 request)
+                   (oauth oauth1 service)
                    (oauth oauth1 token)
                    (oauth oauth1 utils))
 

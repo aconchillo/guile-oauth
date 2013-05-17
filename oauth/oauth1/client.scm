@@ -26,83 +26,55 @@
 ;;; Code:
 
 (define-module (oauth oauth1 client)
+  #:use-module (oauth oauth1 service)
   #:use-module (oauth oauth1 request)
   #:use-module (oauth oauth1 token)
-  #:use-module (rnrs bytevectors)
-  #:use-module (srfi srfi-9)
+  #:use-module (oauth oauth1 utils)
+  #:use-module (ice-9 receive)
   #:use-module (web uri)
-  #:use-module (weinholt crypto sha-1)
-  #:use-module (weinholt text base64)
-  #:export (oauth1-signature
-            oauth1-signature?
-            oauth1-signature-method
-            oauth1-signature-proc
-            oauth1-signature-hmac-sha1
-            oauth1-signature-plaintext
-            oauth1-client
-            oauth1-client?
-            oauth1-client-name
-            oauth1-client-key
-            oauth1-client-secret
-            oauth1-client-signature
-            oauth1-client-request-token-url
-            oauth1-client-authorize-token-url
-            oauth1-client-access-token-url
-            oauth1-client-sign-request))
+  #:export (oauth1-client-request-token
+            oauth1-client-authorize-token
+            oauth1-client-access-token))
 
-(define-record-type <oauth1-signature>
-  (oauth1-signature method proc)
-  oauth1-signature?
-  (method oauth1-signature-method)
-  (proc oauth1-signature-proc))
-
-(define-record-type <oauth1-client>
-  (make-oauth1-client name key secret signature request auth access)
-  oauth1-client?
-  (name oauth1-client-name)
-  (key oauth1-client-key)
-  (secret oauth1-client-secret)
-  (signature oauth1-client-signature)
-  (request oauth1-client-request-token-url)
-  (auth oauth1-client-authorize-token-url)
-  (access oauth1-client-access-token-url))
-
-(define (hmac-sha1-key client token)
-  (string-append (uri-encode (oauth1-client-secret client))
-                 "&"
-                 (uri-encode (oauth1-token-secret token))))
-
-(define (hmac-sha1-signature client request token)
-  (let ((base-string (oauth1-request-signature-base-string request))
-        (key (hmac-sha1-key client token)))
-    (sha-1->bytevector
-     (hmac-sha-1 (string->utf8 key) (string->utf8 base-string)))))
-
-(define oauth1-signature-hmac-sha1
-  (oauth1-signature
-   "HMAC-SHA1"
-   (lambda (client request token)
-     (uri-encode (base64-encode (hmac-sha1-signature client request token))))))
-
-(define (plaintext-signature client token)
-  (hmac-sha1-key client token))
-
-(define oauth1-signature-plaintext
-  (oauth1-signature
-   "PLAINTEXT"
-   (lambda (client request token)
-     (uri-encode (plaintext-signature client token)))))
-
-(define* (oauth1-client name key secret request auth access
-                        #:key (signature oauth1-signature-hmac-sha1))
-  (make-oauth1-client name key secret signature request auth access))
-
-(define (oauth1-client-sign-request client request token)
-  (let* ((signature (oauth1-client-signature client))
-         (proc (oauth1-signature-proc signature)))
+(define* (oauth1-client-request-token client
+                                      #:optional (callback "oob")
+                                      #:key (method 'POST) (params '()))
+  (let* ((url (oauth1-service-request-token-url client))
+         (request (oauth1-request url #:method method #:params params)))
+    (oauth1-request-add-default-params request)
+    (oauth1-request-add-param request 'oauth_callback callback)
     (oauth1-request-add-param request
-                              'oauth_signature_method
-                              (oauth1-signature-method signature))
+                              'oauth_consumer_key
+                              (oauth1-service-key client))
+    (oauth1-service-sign-request client request (oauth1-token "" ""))
+    (receive (response body)
+        (oauth1-http-request request)
+      (string->oauth1-token-params body))))
+
+(define* (oauth1-client-authorize-token client
+                                        #:optional (token #f)
+                                        #:key (params '()))
+  (let* ((url (oauth1-service-authorize-token-url client))
+         (request (oauth1-request url #:method 'GET #:params params)))
+    (when token
+      (oauth1-request-add-param request
+                                'oauth_token
+                                (oauth1-token-token token)))
+    (oauth1-request-http-url request)))
+
+(define* (oauth1-client-access-token client token verifier
+                                     #:key (method 'POST))
+  (let* ((url (oauth1-service-access-token-url client))
+         (request (oauth1-request url #:method method)))
+    (oauth1-request-add-default-params request)
     (oauth1-request-add-param request
-                              'oauth_signature
-                              (proc client request token))))
+                              'oauth_token
+                              (oauth1-token-token token))
+    (oauth1-request-add-param request 'oauth_verifier verifier)
+    (oauth1-request-add-param request
+                              'oauth_consumer_key
+                              (oauth1-service-key client))
+    (oauth1-service-sign-request client request token)
+    (receive (response body)
+        (oauth1-http-request request)
+      (string->oauth1-token-params body))))
