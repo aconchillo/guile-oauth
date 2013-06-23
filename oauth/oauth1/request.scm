@@ -38,6 +38,7 @@
             oauth1-request-url
             oauth1-request-method
             oauth1-request-params
+            oauth1-request-param
             oauth1-request-add-default-params
             oauth1-request-add-param
             oauth1-request-add-params
@@ -60,6 +61,9 @@
                          (params '()))
   (make-oauth1-request url method params))
 
+(define (oauth1-request-param request key)
+  (assq-ref (oauth1-request-params request) key))
+
 (define (oauth1-request-add-default-params request)
   (oauth1-request-add-params
      request
@@ -80,6 +84,11 @@
       (oauth1-request-add-params request (cdr params))))))
 
 (define (oauth1-request-http-headers request)
+  (let* ((params (oauth1-request-params request))
+         (norm-params (oauth1-normalized-header-params params)))
+    `((Authorization . ,(string-append "OAuth realm=\"\", " norm-params)))))
+
+(define (oauth1-request-parse-http-headers request headers)
   (let* ((params (oauth1-request-params request))
          (norm-params (oauth1-normalized-header-params params)))
     `((Authorization . ,(string-append "OAuth realm=\"\", " norm-params)))))

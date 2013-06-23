@@ -26,7 +26,7 @@
 ;;; Code:
 
 (define-module (oauth oauth1 client)
-  #:use-module (oauth oauth1 service)
+  #:use-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 request)
   #:use-module (oauth oauth1 token)
   #:use-module (oauth oauth1 utils)
@@ -36,45 +36,38 @@
             oauth1-client-authorize-token
             oauth1-client-access-token))
 
-(define* (oauth1-client-request-token client
+(define* (oauth1-client-request-token url key secret
                                       #:optional (callback "oob")
                                       #:key (method 'POST) (params '()))
-  (let* ((url (oauth1-service-request-token-url client))
-         (request (oauth1-request url #:method method #:params params)))
+  (let ((request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request 'oauth_callback callback)
-    (oauth1-request-add-param request
-                              'oauth_consumer_key
-                              (oauth1-service-key client))
-    (oauth1-service-sign-request client request (oauth1-token "" ""))
+    (oauth1-request-add-param request 'oauth_consumer_key key)
+    (oauth1-sign-request request secret (oauth1-token "" ""))
     (receive (response body)
         (oauth1-http-request request)
       (string->oauth1-token-params body))))
 
-(define* (oauth1-client-authorize-token client
+(define* (oauth1-client-authorize-token url
                                         #:optional (token #f)
                                         #:key (params '()))
-  (let* ((url (oauth1-service-authorize-token-url client))
-         (request (oauth1-request url #:method 'GET #:params params)))
+  (let ((request (oauth1-request url #:method 'GET #:params params)))
     (when token
       (oauth1-request-add-param request
                                 'oauth_token
                                 (oauth1-token-token token)))
     (oauth1-request-http-url request)))
 
-(define* (oauth1-client-access-token client token verifier
+(define* (oauth1-client-access-token url key secret token verifier
                                      #:key (method 'POST))
-  (let* ((url (oauth1-service-access-token-url client))
-         (request (oauth1-request url #:method method)))
+  (let ((request (oauth1-request url #:method method)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request
                               'oauth_token
                               (oauth1-token-token token))
     (oauth1-request-add-param request 'oauth_verifier verifier)
-    (oauth1-request-add-param request
-                              'oauth_consumer_key
-                              (oauth1-service-key client))
-    (oauth1-service-sign-request client request token)
+    (oauth1-request-add-param request 'oauth_consumer_key key)
+    (oauth1-sign-request request secret token)
     (receive (response body)
         (oauth1-http-request request)
       (string->oauth1-token-params body))))

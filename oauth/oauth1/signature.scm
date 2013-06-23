@@ -1,4 +1,4 @@
-;;; (oauth oauth1 service) --- Guile OAuth 1.0 implementation.
+;;; (oauth oauth1 signature) --- Guile OAuth 1.0 implementation.
 
 ;; Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
@@ -25,7 +25,7 @@
 
 ;;; Code:
 
-(define-module (oauth oauth1 service)
+(define-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 request)
   #:use-module (oauth oauth1 token)
   #:use-module (rnrs bytevectors)
@@ -39,16 +39,7 @@
             oauth1-signature-proc
             oauth1-signature-hmac-sha1
             oauth1-signature-plaintext
-            oauth1-service
-            oauth1-service?
-            oauth1-service-name
-            oauth1-service-key
-            oauth1-service-secret
-            oauth1-service-signature
-            oauth1-service-request-token-url
-            oauth1-service-authorize-token-url
-            oauth1-service-access-token-url
-            oauth1-service-sign-request))
+            oauth1-sign-request))
 
 (define-record-type <oauth1-signature>
   (oauth1-signature method proc)
@@ -56,53 +47,38 @@
   (method oauth1-signature-method)
   (proc oauth1-signature-proc))
 
-(define-record-type <oauth1-service>
-  (make-oauth1-service name key secret signature request auth access)
-  oauth1-service?
-  (name oauth1-service-name)
-  (key oauth1-service-key)
-  (secret oauth1-service-secret)
-  (signature oauth1-service-signature)
-  (request oauth1-service-request-token-url)
-  (auth oauth1-service-authorize-token-url)
-  (access oauth1-service-access-token-url))
-
-(define (hmac-sha1-key service token)
-  (string-append (uri-encode (oauth1-service-secret service))
+(define (hmac-sha1-key secret token)
+  (string-append (uri-encode secret)
                  "&"
                  (uri-encode (oauth1-token-secret token))))
 
-(define (hmac-sha1-signature service request token)
+(define (hmac-sha1-signature request secret token)
   (let ((base-string (oauth1-request-signature-base-string request))
-        (key (hmac-sha1-key service token)))
+        (key (hmac-sha1-key secret token)))
     (sha-1->bytevector
      (hmac-sha-1 (string->utf8 key) (string->utf8 base-string)))))
 
 (define oauth1-signature-hmac-sha1
   (oauth1-signature
    "HMAC-SHA1"
-   (lambda (service request token)
-     (uri-encode (base64-encode (hmac-sha1-signature service request token))))))
+   (lambda (request secret token)
+     (uri-encode (base64-encode (hmac-sha1-signature request secret token))))))
 
-(define (plaintext-signature service token)
-  (hmac-sha1-key service token))
+(define (plaintext-signature secret token)
+  (hmac-sha1-key secret token))
 
 (define oauth1-signature-plaintext
   (oauth1-signature
    "PLAINTEXT"
-   (lambda (service request token)
-     (uri-encode (plaintext-signature service token)))))
+   (lambda (request secret token)
+     (uri-encode (plaintext-signature secret token)))))
 
-(define* (oauth1-service name key secret request auth access
-                        #:key (signature oauth1-signature-hmac-sha1))
-  (make-oauth1-service name key secret signature request auth access))
-
-(define (oauth1-service-sign-request service request token)
-  (let* ((signature (oauth1-service-signature service))
-         (proc (oauth1-signature-proc signature)))
+(define* (oauth1-sign-request request secret token
+                              #:key (signature oauth1-signature-hmac-sha1))
+  (let ((proc (oauth1-signature-proc signature)))
     (oauth1-request-add-param request
                               'oauth_signature_method
                               (oauth1-signature-method signature))
     (oauth1-request-add-param request
                               'oauth_signature
-                              (proc service request token))))
+                              (proc request secret token))))

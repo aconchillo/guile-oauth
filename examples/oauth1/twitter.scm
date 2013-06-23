@@ -45,16 +45,13 @@
    "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" "
    "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"))
 
-(define *twitter*
-  (oauth1-service "twitter"
-                  ""
-                  ""
-                  "https://api.twitter.com/oauth/request_token"
-                  "https://api.twitter.com/oauth/authorize"
-                  "https://api.twitter.com/oauth/access_token"))
+(define *twitter-request-url* "https://api.twitter.com/oauth/request_token")
+(define *twitter-auth-url* "https://api.twitter.com/oauth/authorize")
+(define *twitter-access-url* "https://api.twitter.com/oauth/access_token")
+(define *twitter-client-key* "")
+(define *twitter-client-secret* "")
 
 (define *request-token* (oauth1-token "" ""))
-
 (define *access-token* (oauth1-token "" ""))
 
 (define* (parse-www-form-urlencoded str #:optional (charset "utf-8"))
@@ -69,27 +66,25 @@
 
 (define (request-query-ref request param)
   (let ((query (uri-query (request-uri request))))
-    (assoc-ref (parse-www-form-urlencoded query) param)))
-
-(define (twitter-main-editing-form)
+    (assoc-ref (parse-www-form-urlencoded query) param)))(define (twitter-main-editing-form)
   `(div
     (form (@ (method "POST")
              (action "http://localhost:8080/twitter/auth"))
           (p (label (@ (for "key")) "Consumer key: ")
              (input (@ (name "key") (type "text") (size "50")
-                       (value ,(oauth1-service-key *twitter*)))))
+                       (value *twitter-client-key*))))
           (p (label (@ (for "secret")) "Consumer secret: ")
              (input (@ (name "secret") (type "text") (size "50")
-                       (value ,(oauth1-service-secret *twitter*)))))
+                       (value *twitter-client-secret*))))
           (p (label (@ (for "request")) "Request token URL: ")
              (input (@ (name "request") (type "text") (size "50")
-                       (value ,(oauth1-service-request-token-url *twitter*)))))
+                       (value ,*twitter-request-url*))))
           (p (label (@ (for "auth")) "Authorize token URL: ")
              (input (@ (name "auth") (type "text") (size "50")
-                       (value ,(oauth1-service-authorize-token-url *twitter*)))))
+                       (value ,*twitter-auth-url*))))
           (p (label (@ (for "access")) "Access token URL: ")
              (input (@ (name "access") (type "text") (size "50")
-                       (value ,(oauth1-service-access-token-url *twitter*)))))
+                       (value ,*twitter-access-url*))))
           (input (@ (type "submit") (name "status") (value "Home timeline"))))))
 
 (define (twitter-main-form request body)
@@ -104,24 +99,23 @@
             (display xhtml-doctype port)
             (sxml->xml (twitter-main-form request body) port))))
 
-(define (twitter-client params)
-  (let ((key (assoc-ref params "key"))
-        (secret (assoc-ref params "secret"))
-        (request (assoc-ref params "request"))
-        (auth (assoc-ref params "auth"))
-        (access (assoc-ref params "access")))
-    (oauth1-service "twitter" key secret request auth access)))
-
-(define (twitter-auth-url twitter)
+(define (twitter-authenticate)
   (let* ((callback "http://localhost:8080/twitter/access")
-         (request-params (oauth1-client-request-token twitter callback)))
+         (request-params (oauth1-client-request-token *twitter-request-url*
+                                                      *twitter-client-key*
+                                                      *twitter-client-secret*
+                                                      callback)))
     (set! *request-token* (oauth1-token-params->token request-params))
-    (oauth1-client-authorize-token twitter *request-token*)))
+    (oauth1-client-authorize-token *twitter-auth-url* *request-token*)))
 
 (define (twitter-auth request body)
   (let ((params (parse-www-form-urlencoded (utf8->string body))))
-    (set! *twitter* (twitter-client params))
-    (twitter-auth-url *twitter*)))
+    (set! *twitter-client-key* (assoc-ref params "key"))
+    (set! *twitter-client-secret* (assoc-ref params "secret"))
+    (set! *twitter-request-url* (assoc-ref params "request"))
+    (set! *twitter-auth-url* (assoc-ref params "auth"))
+    (set! *twitter-access-url* (assoc-ref params "access"))
+    (twitter-authenticate)))
 
 (define (twitter-auth-handler request body)
   (values (build-response
@@ -133,7 +127,9 @@
 (define (twitter-access-handler request body)
   (let* ((location "http://localhost:8080/twitter/home_timeline")
          (verifier (request-query-ref request "oauth_verifier"))
-         (access-params (oauth1-client-access-token *twitter*
+         (access-params (oauth1-client-access-token *twitter-access-url*
+                                                    *twitter-client-key*
+                                                    *twitter-client-secret*
                                                     *request-token*
                                                     verifier)))
     (set! *access-token* (oauth1-token-params->token access-params))
@@ -169,8 +165,8 @@
                               (oauth1-token-token *access-token*))
     (oauth1-request-add-param request
                               'oauth_consumer_key
-                              (oauth1-service-key *twitter*))
-    (oauth1-service-sign-request *twitter* request *access-token*)
+                              *twitter-client-key*)
+    (oauth1-sign-request request *twitter-client-secret* *access-token*)
     (receive (response body)
         (oauth1-http-request request)
       (twitter-timeline-html (utf8->string body)))))
