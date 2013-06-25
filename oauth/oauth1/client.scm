@@ -38,12 +38,16 @@
 
 (define* (oauth1-client-request-token url key secret
                                       #:optional (callback "oob")
-                                      #:key (method 'POST) (params '()))
-  (let ((request (oauth1-request url #:method method #:params params)))
+                                      #:key
+                                      (method 'POST)
+                                      (params '())
+                                      (signature oauth1-signature-hmac-sha1))
+  (let ((token (oauth1-token "" ""))
+        (request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request 'oauth_callback callback)
     (oauth1-request-add-param request 'oauth_consumer_key key)
-    (oauth1-sign-request request secret (oauth1-token "" ""))
+    (oauth1-sign-request request secret token #:signature signature)
     (receive (response body)
         (oauth1-http-request request)
       (string->oauth1-token-params body))))
@@ -59,7 +63,9 @@
     (oauth1-request-http-url request)))
 
 (define* (oauth1-client-access-token url key secret token verifier
-                                     #:key (method 'POST))
+                                     #:key
+                                     (method 'POST)
+                                     (signature oauth1-signature-hmac-sha1))
   (let ((request (oauth1-request url #:method method)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request
@@ -67,7 +73,7 @@
                               (oauth1-token-token token))
     (oauth1-request-add-param request 'oauth_verifier verifier)
     (oauth1-request-add-param request 'oauth_consumer_key key)
-    (oauth1-sign-request request secret token)
+    (oauth1-sign-request request secret token #:signature signature)
     (receive (response body)
         (oauth1-http-request request)
       (string->oauth1-token-params body))))
