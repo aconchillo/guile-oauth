@@ -88,11 +88,6 @@
          (norm-params (oauth1-normalized-header-params params)))
     `((Authorization . ,(string-append "OAuth realm=\"\", " norm-params)))))
 
-(define (oauth1-request-parse-http-headers request headers)
-  (let* ((params (oauth1-request-params request))
-         (norm-params (oauth1-normalized-header-params params)))
-    `((Authorization . ,(string-append "OAuth realm=\"\", " norm-params)))))
-
 (define (oauth1-request-http-url request)
   (let* ((url (oauth1-request-url request))
          (params (oauth1-request-params request))
