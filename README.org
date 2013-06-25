@@ -1,4 +1,47 @@
 
 * guile-oauth
 
-guile-oauth is an OAuth module for Guile.
+guile-oauth is a simple OAuth client module for Guile. It supports the
+following features:
+
+- OAuth 1.0 ([[http://tools.ietf.org/html/rfc5849][RFC 5849]]) protocol support.
+- HTTP and HTTPS (needs guile-gnutls).
+- HTTP methods: GET and POST.
+- Signatures: HMAC-SHA1 and PLAINTEXT.
+
+* Installation
+
+guile-oauth is freely available for download under the terms of the GNU
+Lesser General Public License version 3 (LGPLv3).
+
+It depends on the following Guile version and modules:
+
+- [[http://www.gnu.org/software/guile/][Guile]] 2.0.9.
+- [[http://www.gnutls.org][GnuTLS]] Guile bindings (for HTTPS support).
+- [[http://weinholt.se/industria/industria.html][Industria]] (for HMAC-SHA1 signatures).
+
+Clone the repository:
+
+    : $ git clone https://github.com/aconchillo/guile-oauth.git
+
+After cloning the repository:
+
+    : $ autoreconf -vif
+    : $ ./configure --prefix=<guile-prefix>
+    : $ make
+    : $ sudo make install
+
+Where <guile-prefix> should preferably be the same as your system Guile
+installation directory (e.g. /usr).
+
+If everything installed successfully you should be up and running:
+
+    : $ guile
+    : scheme@(guile-user)> (use-modules (oauth oauth1))
+    : scheme@(guile-user)>
+
+It might be that you installed guile-oauth somewhere differently than
+your system's Guile. If so, you need to indicate Guile where to find
+guile-oauth, for example:
+
+    : $ GUILE_LOAD_PATH=/usr/local/share/guile/site guile
