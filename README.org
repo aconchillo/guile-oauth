@@ -16,7 +16,7 @@ Lesser General Public License version 3 (LGPLv3).
 
 It depends on the following Guile version and modules:
 
-- [[http://www.gnu.org/software/guile/][Guile]] 2.0.9.
+- [[http://www.gnu.org/software/guile/][Guile]] >2.0.9.
 - [[http://www.gnutls.org/][GnuTLS]] Guile bindings (for HTTPS support).
 - [[http://weinholt.se/industria/industria.html][Industria]] (for HMAC-SHA1 signatures).
 
