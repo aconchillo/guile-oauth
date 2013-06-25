@@ -34,20 +34,22 @@
   #:use-module (web uri)
   #:export (oauth1-client-request-token
             oauth1-client-authorize-token
-            oauth1-client-access-token))
+            oauth1-client-access-token
+            oauth1-client-request))
 
-(define* (oauth1-client-request-token url key secret
+(define* (oauth1-client-request-token url credentials
                                       #:optional (callback "oob")
                                       #:key
                                       (method 'POST)
-                                      (params '())
-                                      (signature oauth1-signature-hmac-sha1))
+                                      (params '()))
   (let ((token (oauth1-token "" ""))
         (request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request 'oauth_callback callback)
-    (oauth1-request-add-param request 'oauth_consumer_key key)
-    (oauth1-sign-request request secret token #:signature signature)
+    (oauth1-request-add-param request
+                              'oauth_consumer_key
+                              (oauth1-credentials-key credentials))
+    (oauth1-sign-request request credentials token)
     (receive (response body)
         (oauth1-http-request request)
       (string->oauth1-token-params body))))
@@ -62,18 +64,31 @@
                                 (oauth1-token-token token)))
     (oauth1-request-http-url request)))
 
-(define* (oauth1-client-access-token url key secret token verifier
-                                     #:key
-                                     (method 'POST)
-                                     (signature oauth1-signature-hmac-sha1))
+(define* (oauth1-client-access-token url credentials token verifier
+                                     #:key (method 'POST))
   (let ((request (oauth1-request url #:method method)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request
                               'oauth_token
                               (oauth1-token-token token))
     (oauth1-request-add-param request 'oauth_verifier verifier)
-    (oauth1-request-add-param request 'oauth_consumer_key key)
-    (oauth1-sign-request request secret token #:signature signature)
+    (oauth1-request-add-param request
+                              'oauth_consumer_key
+                              (oauth1-credentials-key credentials))
+    (oauth1-sign-request request credentials token)
     (receive (response body)
         (oauth1-http-request request)
       (string->oauth1-token-params body))))
+
+(define* (oauth1-client-request url credentials token
+                                #:key (method 'GET) (params '()))
+  (let ((request (oauth1-request url #:method method #:params params)))
+    (oauth1-request-add-default-params request)
+    (oauth1-request-add-param request
+                              'oauth_token
+                              (oauth1-token-token token))
+    (oauth1-request-add-param request
+                              'oauth_consumer_key
+                              (oauth1-credentials-key credentials))
+    (oauth1-sign-request request credentials token)
+    (oauth1-http-request request)))

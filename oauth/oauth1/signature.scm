@@ -33,13 +33,29 @@
   #:use-module (web uri)
   #:use-module (weinholt crypto sha-1)
   #:use-module (weinholt text base64)
-  #:export (oauth1-signature
+  #:export (oauth1-credentials
+            oauth1-credentials?
+            oauth1-credentials-key
+            oauth1-credentials-secret
+            oauth1-credentials-signature
+            oauth1-signature
             oauth1-signature?
             oauth1-signature-method
             oauth1-signature-proc
             oauth1-signature-hmac-sha1
             oauth1-signature-plaintext
             oauth1-sign-request))
+
+(define-record-type <oauth1-credentials>
+  (make-oauth1-credentials key secret signature)
+  oauth1-credentials?
+  (key oauth1-credentials-key)
+  (secret oauth1-credentials-secret)
+  (signature oauth1-credentials-signature))
+
+(define* (oauth1-credentials key secret
+                             #:key (signature oauth1-signature-hmac-sha1))
+  (make-oauth1-credentials key secret signature))
 
 (define-record-type <oauth1-signature>
   (oauth1-signature method proc)
@@ -73,9 +89,10 @@
    (lambda (request secret token)
      (uri-encode (plaintext-signature secret token)))))
 
-(define* (oauth1-sign-request request secret token
-                              #:key (signature oauth1-signature-hmac-sha1))
-  (let ((proc (oauth1-signature-proc signature)))
+(define* (oauth1-sign-request request credentials token)
+  (let* ((signature (oauth1-credentials-signature credentials))
+         (secret (oauth1-credentials-secret credentials))
+         (proc (oauth1-signature-proc signature)))
     (oauth1-request-add-param request
                               'oauth_signature_method
                               (oauth1-signature-method signature))
