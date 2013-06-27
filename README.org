@@ -68,7 +68,7 @@ guile-oauth, for example:
 
     : > (define request-token (oauth1-client-request-token request-url credentials))
 
-- Connect to the URL for authorizing the request token:
+- Connect to the following returned URL for authorizing the request token:
 
     : > (oauth1-client-authorize-url authorize-url request-token)
 
@@ -77,7 +77,10 @@ guile-oauth, for example:
 
 - Obtain the access token that will allow us to access protected resources:
 
-    : > (define access-token (oauth1-client-access-token access-url credentials request-token verifier))
+    : > (define access-token
+    :     (oauth1-client-access-token access-url credentials request-token verifier))
+
+  The /verifier/ is the string given by Twitter in the previous step.
 
 - Get your tweets:
 
