@@ -31,6 +31,7 @@
   #:use-module (oauth oauth1 request)
   #:use-module (oauth oauth1 utils)
   #:use-module (ice-9 receive)
+  #:use-module (rnrs bytevectors)
   #:use-module (web uri)
   #:export (oauth1-client-request-token
             oauth1-client-authorize-url
@@ -103,9 +104,9 @@ resources. An HTTP method can be selected with @var{method}."
                                 (params '())
                                 (signature oauth1-signature-hmac-sha1))
   "Access a server's protected resource @var{url} with the given client
-@var{credentials} (key and secret) and an access @var{token}. An HTTP
-method can be selected with @var{method} and additional parameters can
-be given in @var{params}."
+@var{credentials} (key and secret) and an access @var{token}. Returns a
+string. An HTTP method can be selected with @var{method} and additional
+parameters can be given in @var{params}."
   (let ((request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request
@@ -115,4 +116,6 @@ be given in @var{params}."
                               'oauth_consumer_key
                               (oauth1-credentials-id credentials))
     (oauth1-request-sign request credentials token #:signature signature)
-    (oauth1-http-request request)))
+    (receive (response body)
+        (oauth1-http-request request)
+      (utf8->string body))))

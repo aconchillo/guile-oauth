@@ -147,32 +147,25 @@
                  ,(hash-ref tweet "text"))))
          tweets)))))
 
-(define (twitter-timeline url request body)
-  (receive (response body)
-      (oauth1-client-request url *twitter-credentials* *access-token*)
-      (twitter-timeline-html (utf8->string body))))
+(define (twitter-timeline url)
+  (let (body (oauth1-client-request url *twitter-credentials* *access-token*))
+    (twitter-timeline-html body)))
 
-(define (twitter-tweets-handler timeline)
+(define (twitter-tweets-handler url)
   (lambda (request body)
     (values
      (build-response #:headers '((content-type . (text/html))))
      (lambda (port)
        (display xhtml-doctype port)
-       (sxml->xml (timeline request body) port)))))
-
-(define (twitter-user-timeline request body)
-  (twitter-timeline "http://api.twitter.com/1.1/statuses/user_timeline.json"
-                    request body))
+       (sxml->xml (twitter-timeline url) port)))))
 
 (define twitter-user-timeline-handler
-  (twitter-tweets-handler twitter-user-timeline))
-
-(define (twitter-home-timeline request body)
-  (twitter-timeline "http://api.twitter.com/1.1/statuses/home_timeline.json"
-                    request body))
+  (twitter-tweets-handler
+   "http://api.twitter.com/1.1/statuses/user_timeline.json"))
 
 (define twitter-home-timeline-handler
-  (twitter-tweets-handler twitter-home-timeline))
+  (twitter-tweets-handler
+   "http://api.twitter.com/1.1/statuses/home_timeline.json"))
 
 ;; Build a resource not found (404) response
 (define (not-found request)
