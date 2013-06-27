@@ -50,23 +50,6 @@ guile-oauth, for example:
 
 * Usage
 
-** Procedures
-
-- (*oauth1-client-request-token* url credentials) Obtain a request token
-  from the server url for the given client credentials.
-
-- (*oauth1-client-authorize-url* url token) Returns a complete authorization
-  URI given the server url and a request token.
-
-- (*oauth1-client-access-token* url credentials token verifier) Obtain
-  an access token from the server url for the given client
-  credentials, request token and verifier.
-
-- (*oauth1-client-request* url credentials token) Access a server's
-  protected resource url with the given client credentials and an access
-  token.
-
-
 ** Example: Twitter client
 
 The following example details how to obtain the tweets of your Twitter
@@ -114,3 +97,20 @@ under the /examples/ directory.
 
     : > (define tweets (json-string->scm result))
     : > (map (lambda (tweet) (cons (hash-ref tweet "user") (hash-ref twee "text"))) tweets)
+
+
+** Procedures
+
+- (*oauth1-client-request-token* url credentials) Obtain a request token
+  from the server url for the given client credentials.
+
+- (*oauth1-client-authorize-url* url token) Returns a complete authorization
+  URI given the server url and a request token.
+
+- (*oauth1-client-access-token* url credentials token verifier) Obtain
+  an access token from the server url for the given client
+  credentials, request token and verifier.
+
+- (*oauth1-client-request* url credentials token) Access a server's
+  protected resource url with the given client credentials and an access
+  token.
