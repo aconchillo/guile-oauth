@@ -32,7 +32,6 @@
   #:use-module (oauth oauth1 utils)
   #:use-module (ice-9 receive)
   #:use-module (rnrs bytevectors)
-  #:use-module (web uri)
   #:export (oauth1-client-request-token
             oauth1-client-authorize-url
             oauth1-client-access-token

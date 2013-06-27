@@ -139,7 +139,7 @@ Signature Base String is a consistent reproducible concatenation of the
         (uri (string->uri (oauth1-request-url request)))
         (params (oauth1-request-params request)))
     (string-join
-     (map (lambda (p) (uri-encode p))
+     (map (lambda (p) (oauth1-uri-encode p))
           (list (symbol->string method)
                 (signature-request-url uri)
                 (oauth1-normalized-params params)))

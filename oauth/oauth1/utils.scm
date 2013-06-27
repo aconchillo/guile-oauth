@@ -27,7 +27,9 @@
 
 (define-module (oauth oauth1 utils)
   #:use-module (gnutls)
+  #:use-module (ice-9 binary-ports)
   #:use-module (ice-9 receive)
+  #:use-module (rnrs bytevectors)
   #:use-module (srfi srfi-19)
   #:use-module (web client)
   #:use-module (web uri)
@@ -37,7 +39,8 @@
             oauth1-normalized-header-params
             oauth1-parse-www-form-urlencoded
             oauth1-http-get
-            oauth1-http-post))
+            oauth1-http-post
+            oauth1-uri-encode))
 
 (define (oauth1-timestamp)
   "Return the number of seconds since the epoch, 00:00:00 UTC on 1
@@ -51,8 +54,8 @@ January 1970."
 (define (encode-and-sort-params params)
   (stable-sort
    (map
-      (lambda (pair) (cons (uri-encode (symbol->string (car pair)))
-                           (uri-encode (cdr pair))))
+      (lambda (pair) (cons (oauth1-uri-encode (symbol->string (car pair)))
+                           (oauth1-uri-encode (cdr pair))))
       (assq-remove! params 'oauth_signature))
    (lambda (a b)
      (cond
@@ -146,3 +149,84 @@ strings."
   (if (eq? (uri-scheme uri) 'http)
       (http-post uri #:headers headers)
       (https-post uri #:headers headers)))
+
+;; We need uri-encode to return uppercase. oauth1-uri-encode is just a
+;; copy of uri-encode from Guile. This will be removed as soon as a new
+;; version > 2.0.9 is released.
+
+(define (call-with-output-string* proc)
+  (let ((port (open-output-string)))
+    (proc port)
+    (let ((str (get-output-string port)))
+      (close-port port)
+      str)))
+
+(define (call-with-output-bytevector* proc)
+  (call-with-values
+      (lambda ()
+        (open-bytevector-output-port))
+    (lambda (port get-bytevector)
+      (proc port)
+      (let ((bv (get-bytevector)))
+        (close-port port)
+        bv))))
+
+(define (call-with-encoded-output-string encoding proc)
+  (if (string-ci=? encoding "utf-8")
+      (string->utf8 (call-with-output-string* proc))
+      (call-with-output-bytevector*
+       (lambda (port)
+         (set-port-encoding! port encoding)
+         (proc port)))))
+
+(define (encode-string str encoding)
+  (if (string-ci=? encoding "utf-8")
+      (string->utf8 str)
+      (call-with-encoded-output-string encoding
+                                       (lambda (port)
+                                         (display str port)))))
+
+(define ascii-alnum-chars
+  (string->char-set
+   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"))
+
+;; RFC 3986, #2.3
+(define unreserved-chars
+  (char-set-union ascii-alnum-chars
+                  (string->char-set "-._~")))
+
+;; Return a new string made from uri-encoding STR, unconditionally
+;; transforming any characters not in UNESCAPED-CHARS.
+;;
+(define* (oauth1-uri-encode str #:key (encoding "utf-8")
+                            (unescaped-chars unreserved-chars))
+  "Percent-encode any character not in the character set,
+UNESCAPED-CHARS.
+
+The default character set includes alphanumerics from ASCII, as well as
+the special characters ‘-’, ‘.’, ‘_’, and ‘~’.  Any other character will
+be percent-encoded, by writing out the character to a bytevector within
+the given ENCODING, then encoding each byte as ‘%HH’, where HH is the
+uppercase hexadecimal representation of the byte."
+  (define (needs-escaped? ch)
+    (not (char-set-contains? unescaped-chars ch)))
+  (if (string-index str needs-escaped?)
+      (call-with-output-string*
+       (lambda (port)
+         (string-for-each
+          (lambda (ch)
+            (if (char-set-contains? unescaped-chars ch)
+                (display ch port)
+                (let* ((bv (encode-string (string ch) encoding))
+                       (len (bytevector-length bv)))
+                  (let lp ((i 0))
+                    (if (< i len)
+                        (let ((byte (bytevector-u8-ref bv i)))
+                          (display #\% port)
+                          (when (< byte 16)
+                            (display #\0 port))
+                          (display (string-upcase (number->string byte 16))
+                                   port)
+                          (lp (1+ i))))))))
+          str)))
+      str))
