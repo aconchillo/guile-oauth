@@ -67,7 +67,7 @@ under the /examples/ directory.
     : > (define credentials (oauth1-credentials key secret))
 
   The /key/ and /secret/ are provided by Twitter once you register a
-  new application.
+  new application at https://dev.twitter.com.
 
 - Obtain a request token:
 
