@@ -1,5 +1,5 @@
 #
-# configure.ac
+# Makefile.am
 #
 # Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
@@ -21,25 +21,4 @@
 # 02110-1301 USA
 #
 
-AC_INIT([guile-oauth], [0.1.0], [aconchillo@gmail.com])
-AC_CONFIG_SRCDIR(oauth/oauth1.scm)
-AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([color-tests -Wall -Wno-portability])
-AM_SILENT_RULES([yes])
-
-GUILE_PROGS
-
-GUILE_MODULE_REQUIRED([json])
-GUILE_MODULE_REQUIRED([gnutls])
-GUILE_MODULE_REQUIRED([weinholt crypto sha-1])
-GUILE_MODULE_REQUIRED([weinholt text base64])
-
-AC_CONFIG_FILES([Makefile
-                 oauth/Makefile
-                 oauth/oauth1/Makefile
-                 examples/Makefile])
-AC_CONFIG_FILES([env], [chmod +x env])
-
-AC_OUTPUT
-
-# configure.ac ends here
+EXTRA_DIST = oauth1/twitter.scm

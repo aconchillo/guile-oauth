@@ -21,7 +21,7 @@
 # 02110-1301 USA
 #
 
-SUBDIRS = oauth
+SUBDIRS = oauth examples
 
 ACLOCAL_AMFLAGS = -I build-aux
 

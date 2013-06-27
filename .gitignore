@@ -13,4 +13,4 @@ Makefile
 Makefile.in
 *.go
 
-guile-oauth-*.tar.gz
+guile-oauth-*
