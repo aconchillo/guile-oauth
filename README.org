@@ -63,14 +63,11 @@ guile-oauth, for example:
 - Obtain a request token:
 
     : > (define request-token
-    :     (oauth1-client-request-token
-    :       "https://api.twitter.com/oauth/request_token"
-    :       credentials))
+    :     (oauth1-client-request-token "https://api.twitter.com/oauth/request_token" credentials))
 
 - Connect to the URL for authorizing the request token:
 
-    : > (oauth1-client-authorize-url "https://api.twitter.com/oauth/authorize"
-    :                                request-token)
+    : > (oauth1-client-authorize-url "https://api.twitter.com/oauth/authorize" request-token)
 
   Here you will need to login to Twitter or simply authorize your
   application if you are already logged in.
@@ -78,19 +75,14 @@ guile-oauth, for example:
 - Obtain the access token that will allow us to access protected resources:
 
     : > (define access-token
-    :     (oauth1-client-access-token
-    :       "https://api.twitter.com/oauth/access_token"
-    :       credentials request-token verifier))
+    :     (oauth1-client-access-token "https://api.twitter.com/oauth/access_token" credentials request-token verifier))
 
 - Get your tweets:
 
     : > (define result
-    :     (oauth1-client-request
-    :       "http://api.twitter.com/1.1/statuses/user_timeline.json"
-    :       credentials access-token)
+    :     (oauth1-client-request "http://api.twitter.com/1.1/statuses/user_timeline.json" credentials access-token)
 
 - Parse your tweets with JSON and get a list of user/tweet pairs:
 
     : > (define tweets (json-string->scm result))
-    : > (map (lambda (tweet) (cons (hash-ref tweet "user")
-    : >                            (hash-ref twee "text"))) tweets)
+    : > (map (lambda (tweet) (cons (hash-ref tweet "user") (hash-ref twee "text"))) tweets)
