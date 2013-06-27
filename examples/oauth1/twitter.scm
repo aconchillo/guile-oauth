@@ -50,22 +50,14 @@
 (define *twitter-access-url* "https://api.twitter.com/oauth/access_token")
 (define *twitter-credentials* (oauth1-credentials "" ""))
 
-(define *request-token* (oauth1-token "" ""))
-(define *access-token* (oauth1-token "" ""))
-
-(define* (parse-www-form-urlencoded str #:optional (charset "utf-8"))
-  (map
-   (lambda (piece)
-     (let ((equals (string-index piece #\=)))
-       (if equals
-           (cons (uri-decode (substring piece 0 equals) #:encoding charset)
-                 (uri-decode (substring piece (1+ equals)) #:encoding charset))
-           (cons (uri-decode piece #:encoding charset) ""))))
-   (string-split str #\&)))
+(define *request-token* (oauth1-credentials "" ""))
+(define *access-token* (oauth1-credentials "" ""))
 
 (define (request-query-ref request param)
   (let ((query (uri-query (request-uri request))))
-    (assoc-ref (parse-www-form-urlencoded query) param)))(define (twitter-main-editing-form)
+    (assoc-ref (oauth1-parse-www-form-urlencoded query) param)))
+
+(define (twitter-main-editing-form)
   `(div
     (form (@ (method "POST")
              (action "http://localhost:8080/twitter/auth"))
@@ -99,15 +91,15 @@
             (sxml->xml (twitter-main-form request body) port))))
 
 (define (twitter-authenticate)
-  (let* ((callback "http://localhost:8080/twitter/access")
-         (request-params (oauth1-client-request-token *twitter-request-url*
-                                                      *twitter-credentials*
-                                                      callback)))
-    (set! *request-token* (oauth1-token-params->token request-params))
-    (oauth1-client-authorize-token *twitter-auth-url* *request-token*)))
+  (let ((callback "http://localhost:8080/twitter/access"))
+    (set! *request-token*
+          (oauth1-client-request-token *twitter-request-url*
+                                       *twitter-credentials*
+                                       callback))
+    (oauth1-client-authorize-url *twitter-auth-url* *request-token*)))
 
 (define (twitter-auth request body)
-  (let ((params (parse-www-form-urlencoded (utf8->string body))))
+  (let ((params (oauth1-parse-www-form-urlencoded (utf8->string body))))
     (set! *twitter-credentials*
           (oauth1-credentials (assoc-ref params "key")
                               (assoc-ref params "secret")))
@@ -124,13 +116,13 @@
           (lambda (port) #nil)))
 
 (define (twitter-access-handler request body)
-  (let* ((location "http://localhost:8080/twitter/home_timeline")
-         (verifier (request-query-ref request "oauth_verifier"))
-         (access-params (oauth1-client-access-token *twitter-access-url*
-                                                    *twitter-credentials*
-                                                    *request-token*
-                                                    verifier)))
-    (set! *access-token* (oauth1-token-params->token access-params))
+  (let ((location "http://localhost:8080/twitter/home_timeline")
+        (verifier (request-query-ref request "oauth_verifier")))
+    (set! *access-token*
+          (oauth1-client-access-token *twitter-access-url*
+                                      *twitter-credentials*
+                                      *request-token*
+                                      verifier))
     (values (build-response
            #:code 302
            #:headers `((content-type . (text/html))

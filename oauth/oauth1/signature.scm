@@ -26,36 +26,18 @@
 ;;; Code:
 
 (define-module (oauth oauth1 signature)
-  #:use-module (oauth oauth1 request)
-  #:use-module (oauth oauth1 token)
+  #:use-module (oauth oauth1 credentials)
   #:use-module (rnrs bytevectors)
   #:use-module (srfi srfi-9)
   #:use-module (web uri)
   #:use-module (weinholt crypto sha-1)
   #:use-module (weinholt text base64)
-  #:export (oauth1-credentials
-            oauth1-credentials?
-            oauth1-credentials-key
-            oauth1-credentials-secret
-            oauth1-credentials-signature
-            oauth1-signature
+  #:export (oauth1-signature
             oauth1-signature?
             oauth1-signature-method
             oauth1-signature-proc
             oauth1-signature-hmac-sha1
-            oauth1-signature-plaintext
-            oauth1-sign-request))
-
-(define-record-type <oauth1-credentials>
-  (make-oauth1-credentials key secret signature)
-  oauth1-credentials?
-  (key oauth1-credentials-key)
-  (secret oauth1-credentials-secret)
-  (signature oauth1-credentials-signature))
-
-(define* (oauth1-credentials key secret
-                             #:key (signature oauth1-signature-hmac-sha1))
-  (make-oauth1-credentials key secret signature))
+            oauth1-signature-plaintext))
 
 (define-record-type <oauth1-signature>
   (oauth1-signature method proc)
@@ -63,39 +45,36 @@
   (method oauth1-signature-method)
   (proc oauth1-signature-proc))
 
-(define (hmac-sha1-key secret token)
-  (string-append (uri-encode secret)
-                 "&"
-                 (uri-encode (oauth1-token-secret token))))
+;;
+;; HMAC-SHA1
+;;
 
-(define (hmac-sha1-signature request secret token)
-  (let ((base-string (oauth1-request-signature-base-string request))
-        (key (hmac-sha1-key secret token)))
+(define (hmac-sha1-key credentials token)
+  (string-append (uri-encode (oauth1-credentials-secret credentials))
+                 "&"
+                 (uri-encode (oauth1-credentials-secret token))))
+
+(define (hmac-sha1-signature base-string credentials token)
+  (let ((key (hmac-sha1-key credentials token)))
     (sha-1->bytevector
      (hmac-sha-1 (string->utf8 key) (string->utf8 base-string)))))
 
 (define oauth1-signature-hmac-sha1
   (oauth1-signature
    "HMAC-SHA1"
-   (lambda (request secret token)
-     (uri-encode (base64-encode (hmac-sha1-signature request secret token))))))
+   (lambda (base-string credentials token)
+     (let ((s (hmac-sha1-signature base-string credentials token)))
+       (uri-encode (base64-encode s))))))
 
-(define (plaintext-signature secret token)
-  (hmac-sha1-key secret token))
+;;
+;; PLAINTEXT
+;;
+
+(define (plaintext-signature credentials token)
+  (hmac-sha1-key credentials token))
 
 (define oauth1-signature-plaintext
   (oauth1-signature
    "PLAINTEXT"
-   (lambda (request secret token)
-     (uri-encode (plaintext-signature secret token)))))
-
-(define* (oauth1-sign-request request credentials token)
-  (let* ((signature (oauth1-credentials-signature credentials))
-         (secret (oauth1-credentials-secret credentials))
-         (proc (oauth1-signature-proc signature)))
-    (oauth1-request-add-param request
-                              'oauth_signature_method
-                              (oauth1-signature-method signature))
-    (oauth1-request-add-param request
-                              'oauth_signature
-                              (proc request secret token))))
+   (lambda (base-string credentials token)
+     (uri-encode (plaintext-signature credentials token)))))

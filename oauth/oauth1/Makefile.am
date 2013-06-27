@@ -25,9 +25,9 @@ moddir=$(prefix)/share/guile/site/oauth/oauth1
 
 SOURCES = \
   client.scm \
+  credentials.scm \
   request.scm \
   signature.scm \
-  token.scm \
   utils.scm \
   #
 

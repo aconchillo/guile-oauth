@@ -26,14 +26,14 @@
 ;;; Code:
 
 (define-module (oauth oauth1 client)
+  #:use-module (oauth oauth1 credentials)
   #:use-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 request)
-  #:use-module (oauth oauth1 token)
   #:use-module (oauth oauth1 utils)
   #:use-module (ice-9 receive)
   #:use-module (web uri)
   #:export (oauth1-client-request-token
-            oauth1-client-authorize-token
+            oauth1-client-authorize-url
             oauth1-client-access-token
             oauth1-client-request))
 
@@ -41,54 +41,78 @@
                                       #:optional (callback "oob")
                                       #:key
                                       (method 'POST)
-                                      (params '()))
-  (let ((token (oauth1-token "" ""))
+                                      (params '())
+                                      (signature oauth1-signature-hmac-sha1))
+  "Obtain a request token from the server @var{url} for the given client
+@var{credentials} (key and secret). Takes one optional argument,
+@var{callback}, to set the callback URI that the server will redirect
+after authorization is completed, it defaults to 'oob' (no redirection
+is performed). An HTTP method can be selected with @var{method} and
+additional parameters can be given in @var{params}."
+  (let ((token (oauth1-credentials "" ""))
         (request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request 'oauth_callback callback)
     (oauth1-request-add-param request
                               'oauth_consumer_key
-                              (oauth1-credentials-key credentials))
-    (oauth1-sign-request request credentials token)
+                              (oauth1-credentials-id credentials))
+    (oauth1-request-sign request credentials token #:signature signature)
     (receive (response body)
         (oauth1-http-request request)
-      (string->oauth1-token-params body))))
+      (oauth1-token-body->credentials body))))
 
-(define* (oauth1-client-authorize-token url
-                                        #:optional (token #f)
-                                        #:key (params '()))
+(define* (oauth1-client-authorize-url url
+                                      #:optional (token #f)
+                                      #:key (params '()))
+  "Returns a complete authorization URI given the server @var{url} and a
+request @var{token}. A web application can automatically redirect to the
+returned URI otherwise ask the client to connect to it with a web
+browser."
   (let ((request (oauth1-request url #:method 'GET #:params params)))
     (when token
       (oauth1-request-add-param request
                                 'oauth_token
-                                (oauth1-token-token token)))
+                                (oauth1-credentials-id token)))
     (oauth1-request-http-url request)))
 
 (define* (oauth1-client-access-token url credentials token verifier
-                                     #:key (method 'POST))
+                                     #:key
+                                     (method 'POST)
+                                     (signature oauth1-signature-hmac-sha1))
+  "Obtain an access token from the server @var{url} for the given client
+@var{credentials} (key and secret), request @var{token} and
+@var{verifier}. Access tokens are used to connect to protected
+resources. An HTTP method can be selected with @var{method}."
   (let ((request (oauth1-request url #:method method)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request
                               'oauth_token
-                              (oauth1-token-token token))
+                              (oauth1-credentials-id token))
     (oauth1-request-add-param request 'oauth_verifier verifier)
     (oauth1-request-add-param request
                               'oauth_consumer_key
-                              (oauth1-credentials-key credentials))
-    (oauth1-sign-request request credentials token)
+                              (oauth1-credentials-id credentials))
+    (oauth1-request-sign request credentials token #:signature signature)
     (receive (response body)
         (oauth1-http-request request)
-      (string->oauth1-token-params body))))
+      (oauth1-token-body->credentials body))))
 
 (define* (oauth1-client-request url credentials token
-                                #:key (method 'GET) (params '()))
+                                #:key
+                                (method 'GET)
+                                (params '())
+                                (signature oauth1-signature-hmac-sha1))
+  "Access a server's protected resource @var{url} with the given client
+@var{credentials} (key and secret) and an access @var{token}. An HTTP
+method can be selected with @var{method} and additional parameters can
+be given in @var{params}."
   (let ((request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request
                               'oauth_token
-                              (oauth1-token-token token))
+                              (oauth1-credentials-id token))
     (oauth1-request-add-param request
                               'oauth_consumer_key
-                              (oauth1-credentials-key credentials))
-    (oauth1-sign-request request credentials token)
+                              (oauth1-credentials-id credentials))
+    (oauth1-request-sign request credentials token #:signature signature)
     (oauth1-http-request request)))

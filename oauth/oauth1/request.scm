@@ -26,6 +26,7 @@
 ;;; Code:
 
 (define-module (oauth oauth1 request)
+  #:use-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 utils)
   #:use-module (gnutls)
   #:use-module (ice-9 format)
@@ -45,6 +46,7 @@
             oauth1-request-http-headers
             oauth1-request-http-url
             oauth1-request-signature-base-string
+            oauth1-request-sign
             oauth1-http-request))
 
 (define VERSION "1.0")
@@ -54,28 +56,39 @@
   oauth1-request?
   (url oauth1-request-url)
   (method oauth1-request-method)
-  (params  oauth1-request-params oauth1-request-set-params))
+  (params oauth1-request-params oauth1-request-set-params))
 
 (define* (oauth1-request url #:key
                          (method 'POST)
                          (params '()))
+  "Creates an empty request for the given @var{url}, HTTP @var{method}
+and additional @var{params}. A request might end up being a request to
+get a request token, an access token or a protected resource."
   (make-oauth1-request url method params))
 
-(define (oauth1-request-param request key)
-  (assq-ref (oauth1-request-params request) key))
+(define (oauth1-request-param request name)
+  "Get the parameter with the given @var{name} from the list of
+parameters in @var{request}."
+  (assq-ref (oauth1-request-params request) name))
 
 (define (oauth1-request-add-default-params request)
+  "Add default parameters to the given @var{request}. Default parameters
+are: oauth_version, oauth_timestamp and oauth_nonce."
   (oauth1-request-add-params
      request
      `((oauth_version . ,VERSION)
        (oauth_timestamp . ,(oauth1-timestamp))
        (oauth_nonce . ,(oauth1-nonce)))))
 
-(define (oauth1-request-add-param request key value)
+(define (oauth1-request-add-param request name value)
+  "Add a single parameter with the given @var{name} and @var{value} to
+the @var{request}."
   (let ((params (oauth1-request-params request)))
-    (oauth1-request-set-params request (assoc-set! params key value))))
+    (oauth1-request-set-params request (assoc-set! params name value))))
 
 (define (oauth1-request-add-params request params)
+  "Add a list of parameters to the given @var{request}. @var{params}
+must be an association list."
   (cond
    ((null? params) (oauth1-request-params request))
    (else
@@ -84,15 +97,23 @@
       (oauth1-request-add-params request (cdr params))))))
 
 (define (oauth1-request-http-headers request)
+  "Obtain the HTTP headers for the given @var{request}. This is the
+Authorization header with all the list of @var{request} parameters."
   (let* ((params (oauth1-request-params request))
          (norm-params (oauth1-normalized-header-params params)))
     `((Authorization . ,(string-append "OAuth realm=\"\", " norm-params)))))
 
 (define (oauth1-request-http-url request)
+  "Obtain the URI for the given @var{request}. The URI will contain all
+the @var{request} parameters as URI query arguments."
   (let* ((url (oauth1-request-url request))
          (params (oauth1-request-params request))
          (norm-params (oauth1-normalized-params params)))
     (string-append url (if (null? params) "" "?") norm-params)))
+
+;;
+;; Signing request
+;;
 
 (define (standard-port? uri)
   (or (not (uri-port uri))
@@ -114,6 +135,9 @@
                  (uri-path uri)))
 
 (define (oauth1-request-signature-base-string request)
+  "Get the Signature Base String for the given @var{request}. The
+Signature Base String is a consistent reproducible concatenation of the
+@var{request} elements into a single string."
   (let ((method (oauth1-request-method request))
         (uri (string->uri (oauth1-request-url request)))
         (params (oauth1-request-params request)))
@@ -123,6 +147,26 @@
                 (signature-request-url uri)
                 (oauth1-normalized-params params)))
      "&")))
+
+(define* (oauth1-request-sign request credentials token
+                              #:key (signature oauth1-signature-hmac-sha1))
+  "Adds the signature and signature method parameters to the given
+@var{request}. The signature will be computed using the client
+@var{credentials} and @var{token} and the given @var{signature} method."
+  ;; Before computing signature, we need to add signature method
+  ;; parameter first.
+  (oauth1-request-add-param request
+                            'oauth_signature_method
+                            (oauth1-signature-method signature))
+  (let ((proc (oauth1-signature-proc signature))
+        (base-string (oauth1-request-signature-base-string request)))
+    (oauth1-request-add-param request
+                              'oauth_signature
+                              (proc base-string credentials token))))
+
+;;
+;; Request HTTP/HTTPS
+;;
 
 (define (https-call https-proc)
   (lambda* (uri #:key (headers '()))
@@ -158,14 +202,14 @@
 (define https-get (https-call http-get))
 (define https-post (https-call http-post))
 
-(define* (oauth1-http-get request)
+(define* (request-http-get request)
   (let ((uri (string->uri (oauth1-request-url request)))
         (headers (oauth1-request-http-headers request)))
     (if (eq? (uri-scheme uri) 'http)
       (http-get uri #:headers headers)
       (https-get uri #:headers headers))))
 
-(define* (oauth1-http-post request)
+(define* (request-http-post request)
   (let ((uri (string->uri (oauth1-request-url request)))
         (headers (oauth1-request-http-headers request)))
     (if (eq? (uri-scheme uri) 'http)
@@ -173,8 +217,11 @@
       (https-post uri #:headers headers))))
 
 (define* (oauth1-http-request request)
+  "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and
+parameters are already defined in the given @var{request}
+object. Currently, only the GET and POST methods are supported."
   (let ((method (oauth1-request-method request)))
     (case method
-      ((GET) (oauth1-http-get request))
-      ((POST) (oauth1-http-post request))
+      ((GET) (request-http-get request))
+      ((POST) (request-http-post request))
       (else throw 'oauth-invalid-method))))
