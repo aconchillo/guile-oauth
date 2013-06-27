@@ -5,7 +5,7 @@ guile-oauth is a simple OAuth client module for Guile. It supports the
 following features:
 
 - OAuth 1.0 ([[http://tools.ietf.org/html/rfc5849][RFC 5849]]) protocol support.
-- HTTP and HTTPS (needs guile-gnutls).
+- HTTP and HTTPS.
 - HMAC-SHA1 and PLAINTEXT signatures.
 
 It depends on the following Guile version and modules:

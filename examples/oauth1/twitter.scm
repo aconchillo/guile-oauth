@@ -1,4 +1,4 @@
-#!/usr//bin/env guile
+#!/usr/local/bin/guile -s
 !#
 
 ;;; Guile OAuth client example.
@@ -24,7 +24,7 @@
 
 ;;; Commentary:
 
-;; OAuth client sample
+;; OAuth Twitter client example.
 
 ;;; Code:
 
@@ -148,8 +148,8 @@
          tweets)))))
 
 (define (twitter-timeline url)
-  (let (body (oauth1-client-request url *twitter-credentials* *access-token*))
-    (twitter-timeline-html body)))
+  (twitter-timeline-html
+   (oauth1-client-request url *twitter-credentials* *access-token*)))
 
 (define (twitter-tweets-handler url)
   (lambda (request body)
