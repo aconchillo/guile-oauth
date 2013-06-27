@@ -9,6 +9,7 @@ following features:
 - HTTP methods: GET and POST.
 - Signatures: HMAC-SHA1 and PLAINTEXT.
 
+
 * Installation
 
 guile-oauth is freely available for download under the terms of the GNU
@@ -47,9 +48,32 @@ guile-oauth, for example:
     : $ GUILE_LOAD_PATH=/usr/local/share/guile/site guile
 
 
-* Example: Twitter client
+* Usage
 
-- Load OAuth and JSON modules:
+** Procedures
+
+- (*oauth1-client-request-token* url credentials) Obtain a request token
+  from the server url for the given client credentials.
+
+- (*oauth1-client-authorize-url* url token) Returns a complete authorization
+  URI given the server url and a request token.
+
+- (*oauth1-client-access-token* url credentials token verifier) Obtain
+  an access token from the server url for the given client
+  credentials, request token and verifier.
+
+- (*oauth1-client-request* url credentials token) Access a server's
+  protected resource url with the given client credentials and an access
+  token.
+
+
+** Example: Twitter client
+
+The following example details how to obtain the tweets of your Twitter
+home timeline. The complete example is available as a web application
+under the /examples/ directory.
+
+- Load the OAuth and JSON modules:
 
     : > (use-modules (oauth oauth1) (json))
 
@@ -58,7 +82,7 @@ guile-oauth, for example:
     : > (define request-url "https://api.twitter.com/oauth/request_token")
     : > (define authorize-url "https://api.twitter.com/oauth/authorize")
     : > (define access-url "https://api.twitter.com/oauth/access_token")
-    : > (define user-timeline "http://api.twitter.com/1.1/statuses/user_timeline.json")
+    : > (define home-timeline "http://api.twitter.com/1.1/statuses/home_timeline.json")
     : > (define credentials (oauth1-credentials key secret))
 
   The /key/ and /secret/ are provided by Twitter once you register a
@@ -84,9 +108,9 @@ guile-oauth, for example:
 
 - Get your tweets:
 
-    : > (define result (oauth1-client-request user-timeline credentials access-token)
+    : > (define result (oauth1-client-request home-timeline credentials access-token)
 
-- Parse your tweets with JSON and get a list of user/tweet pairs:
+- Parse the tweets with JSON and get a list of user/tweet pairs:
 
     : > (define tweets (json-string->scm result))
     : > (map (lambda (tweet) (cons (hash-ref tweet "user") (hash-ref twee "text"))) tweets)
