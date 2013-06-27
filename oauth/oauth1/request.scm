@@ -28,11 +28,8 @@
 (define-module (oauth oauth1 request)
   #:use-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 utils)
-  #:use-module (gnutls)
   #:use-module (ice-9 format)
-  #:use-module (ice-9 receive)
   #:use-module (srfi srfi-9)
-  #:use-module (web client)
   #:use-module (web uri)
   #:export (oauth1-request
             oauth1-request?
@@ -168,60 +165,14 @@ Signature Base String is a consistent reproducible concatenation of the
 ;; Request HTTP/HTTPS
 ;;
 
-(define (https-call https-proc)
-  (lambda* (uri #:key (headers '()))
-    (let* ((socket (open-socket-for-uri uri))
-           (session (make-session connection-end/client)))
-      ;; (set-log-level! 9)
-      ;; (set-log-procedure!
-      ;;  (lambda (level msg) (format #t "|<~d>| ~a" level msg)))
-
-      ;; Use the file descriptor that underlies SOCKET.
-      (set-session-transport-fd! session (fileno socket))
-
-      ;; Use the default settings.
-      (set-session-priorities! session "NORMAL")
-
-      ;; Create anonymous credentials.
-      (set-session-credentials! session
-                                (make-anonymous-client-credentials))
-      (set-session-credentials! session
-                                (make-certificate-credentials))
-
-      ;; Perform the TLS handshake with the server.
-      (handshake session)
-
-      (receive (response body)
-          (https-proc uri
-                     #:port (session-record-port session)
-                     #:keep-alive? #t
-                     #:headers headers)
-        (bye session close-request/rdwr)
-        (values response body)))))
-
-(define https-get (https-call http-get))
-(define https-post (https-call http-post))
-
-(define* (request-http-get request)
-  (let ((uri (string->uri (oauth1-request-url request)))
-        (headers (oauth1-request-http-headers request)))
-    (if (eq? (uri-scheme uri) 'http)
-      (http-get uri #:headers headers)
-      (https-get uri #:headers headers))))
-
-(define* (request-http-post request)
-  (let ((uri (string->uri (oauth1-request-url request)))
-        (headers (oauth1-request-http-headers request)))
-    (if (eq? (uri-scheme uri) 'http)
-      (http-post uri #:headers headers)
-      (https-post uri #:headers headers))))
-
 (define* (oauth1-http-request request)
   "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and
 parameters are already defined in the given @var{request}
 object. Currently, only the GET and POST methods are supported."
-  (let ((method (oauth1-request-method request)))
+  (let ((uri (string->uri (oauth1-request-url request)))
+        (method (oauth1-request-method request))
+        (headers (oauth1-request-http-headers request)))
     (case method
-      ((GET) (request-http-get request))
-      ((POST) (request-http-post request))
+      ((GET) (oauth1-http-get uri headers))
+      ((POST) (oauth1-http-post uri headers))
       (else throw 'oauth-invalid-method))))

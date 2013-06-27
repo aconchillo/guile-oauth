@@ -26,13 +26,18 @@
 ;;; Code:
 
 (define-module (oauth oauth1 utils)
+  #:use-module (gnutls)
+  #:use-module (ice-9 receive)
   #:use-module (srfi srfi-19)
+  #:use-module (web client)
   #:use-module (web uri)
   #:export (oauth1-timestamp
             oauth1-nonce
             oauth1-normalized-params
             oauth1-normalized-header-params
-            oauth1-parse-www-form-urlencoded))
+            oauth1-parse-www-form-urlencoded
+            oauth1-http-get
+            oauth1-http-post))
 
 (define (oauth1-timestamp)
   "Return the number of seconds since the epoch, 00:00:00 UTC on 1
@@ -89,3 +94,55 @@ strings."
                  (uri-decode (substring piece (1+ equals)) #:encoding charset))
            (cons (uri-decode piece #:encoding charset) ""))))
    (string-split str #\&)))
+
+;;
+;; HTTP/HTTPS methods
+;;
+
+(define (https-call https-proc)
+  (lambda* (uri #:key (headers '()))
+    (let* ((socket (open-socket-for-uri uri))
+           (session (make-session connection-end/client)))
+      ;; (set-log-level! 9)
+      ;; (set-log-procedure!
+      ;;  (lambda (level msg) (format #t "|<~d>| ~a" level msg)))
+
+      ;; Use the file descriptor that underlies SOCKET.
+      (set-session-transport-fd! session (fileno socket))
+
+      ;; Use the default settings.
+      (set-session-priorities! session "NORMAL")
+
+      ;; Create anonymous credentials.
+      (set-session-credentials! session
+                                (make-anonymous-client-credentials))
+      (set-session-credentials! session
+                                (make-certificate-credentials))
+
+      ;; Perform the TLS handshake with the server.
+      (handshake session)
+
+      (receive (response body)
+          (https-proc uri
+                     #:port (session-record-port session)
+                     #:keep-alive? #t
+                     #:headers headers)
+        (bye session close-request/rdwr)
+        (values response body)))))
+
+(define https-get (https-call http-get))
+(define https-post (https-call http-post))
+
+(define* (oauth1-http-get uri headers)
+  "Perform an HTTP GET request with the given HTTP @var{headers} to the
+@var{uri}."
+  (if (eq? (uri-scheme uri) 'http)
+      (http-get uri #:headers headers)
+      (https-get uri #:headers headers)))
+
+(define* (oauth1-http-post uri headers)
+  "Perform an HTTP POST request with the given HTTP @var{headers} to the
+@var{uri}."
+  (if (eq? (uri-scheme uri) 'http)
+      (http-post uri #:headers headers)
+      (https-post uri #:headers headers)))
