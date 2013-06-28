@@ -99,6 +99,9 @@ under the /examples/ directory.
 
 ** Procedures
 
+These are the main procedures for guile-oauth which are implemented in
+terms of other guile-oauth procedures you will find in the API.
+
 - (*oauth1-client-request-token* url credentials) Obtain a request token
   from the server url for the given client credentials.
 
