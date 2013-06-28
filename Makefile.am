@@ -27,3 +27,5 @@ ACLOCAL_AMFLAGS = -I build-aux
 
 dist-hook:
 	$(SHELL) $(top_srcdir)/ChangeLog > $(top_distdir)/ChangeLog
+
+EXTRA_DIST = TODO
