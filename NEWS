@@ -1,4 +1,10 @@
 
+* Version 0.1.1 (Jul 6, 2013)
+
+  - Use pure sh script syntax in env.in.
+    (thanks to Andrew Gaylard)
+
+
 * Version 0.1.0 (Jun 27, 2013)
 
   Initial release.

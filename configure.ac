@@ -21,7 +21,7 @@
 # 02110-1301 USA
 #
 
-AC_INIT([guile-oauth], [0.1.0], [aconchillo@gmail.com])
+AC_INIT([guile-oauth], [0.1.1], [aconchillo@gmail.com])
 AC_CONFIG_SRCDIR(oauth/oauth1.scm)
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([color-tests -Wall -Wno-portability])
