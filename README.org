@@ -102,16 +102,16 @@ under the /examples/ directory.
 These are the main procedures for guile-oauth which are implemented in
 terms of other guile-oauth procedures you will find in the API.
 
-- (*oauth1-client-request-token* url credentials) Obtain a request token
-  from the server url for the given client credentials.
+- (*oauth1-client-request-token* url credentials) : Obtain a request
+  token from the server url for the given client credentials.
 
-- (*oauth1-client-authorize-url* url token) Returns a complete authorization
-  URI given the server url and a request token.
+- (*oauth1-client-authorize-url* url token) : Returns a complete
+  authorization URI given the server url and a request token.
 
-- (*oauth1-client-access-token* url credentials token verifier) Obtain
-  an access token from the server url for the given client
-  credentials, request token and verifier.
+- (*oauth1-client-access-token* url credentials token verifier) : Obtain
+  an access token from the server url for the given client credentials,
+  request token and verifier.
 
-- (*oauth1-client-request* url credentials token) Access a server's
+- (*oauth1-client-request* url credentials token) : Access a server's
   protected resource url with the given client credentials and an access
   token.
