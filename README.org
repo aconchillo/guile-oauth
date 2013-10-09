@@ -10,7 +10,7 @@ following features:
 
 It depends on the following Guile version and modules:
 
-- [[http://www.gnu.org/software/guile/][Guile]] 2.0.9.
+- [[http://www.gnu.org/software/guile/][Guile]] >= 2.0.9.
 - [[http://www.gnutls.org/][GnuTLS]] Guile bindings (for HTTPS support).
 - [[http://weinholt.se/industria/industria.html][Industria]] (for HMAC-SHA1 signatures).
 
@@ -47,6 +47,26 @@ guile-oauth, for example:
 
 
 * Usage
+
+** Procedures
+
+These are the main procedures for guile-oauth which are implemented in
+terms of other guile-oauth procedures you will find in the API.
+
+- (*oauth1-client-request-token* url credentials) : Obtain a request
+  token from the server url for the given client credentials.
+
+- (*oauth1-client-authorize-url* url token) : Returns a complete
+  authorization URI given the server url and a request token.
+
+- (*oauth1-client-access-token* url credentials token verifier) : Obtain
+  an access token from the server url for the given client credentials,
+  request token and verifier.
+
+- (*oauth1-client-request* url credentials token) : Access a server's
+  protected resource url with the given client credentials and an access
+  token.
+
 
 ** Example: Twitter client
 
@@ -95,23 +115,3 @@ under the /examples/ directory.
 
     : > (define tweets (json-string->scm result))
     : > (map (lambda (tweet) (cons (hash-ref tweet "user") (hash-ref twee "text"))) tweets)
-
-
-** Procedures
-
-These are the main procedures for guile-oauth which are implemented in
-terms of other guile-oauth procedures you will find in the API.
-
-- (*oauth1-client-request-token* url credentials) : Obtain a request
-  token from the server url for the given client credentials.
-
-- (*oauth1-client-authorize-url* url token) : Returns a complete
-  authorization URI given the server url and a request token.
-
-- (*oauth1-client-access-token* url credentials token verifier) : Obtain
-  an access token from the server url for the given client credentials,
-  request token and verifier.
-
-- (*oauth1-client-request* url credentials token) : Access a server's
-  protected resource url with the given client credentials and an access
-  token.
