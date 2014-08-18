@@ -1,4 +1,9 @@
 
+* Version 0.2.0 (Aug 18, 2014)
+
+  - Use uri-encode from guile >= 2.0.10.
+
+
 * Version 0.1.1 (Jul 6, 2013)
 
   - Use pure sh script syntax in env.in.

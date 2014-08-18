@@ -10,7 +10,7 @@ following features:
 
 It depends on the following Guile version and modules:
 
-- [[http://www.gnu.org/software/guile/][Guile]] >= 2.0.9.
+- [[http://www.gnu.org/software/guile/][Guile]] >= 2.0.10.
 - [[http://www.gnutls.org/][GnuTLS]] Guile bindings (for HTTPS support).
 - [[http://weinholt.se/industria/industria.html][Industria]] (for HMAC-SHA1 signatures).
 
@@ -22,7 +22,7 @@ Lesser General Public License version 3 (LGPLv3+).
 
 Download the latest tarball and untar it:
 
-- [[http://download.savannah.gnu.org/releases/guile-oauth/guile-oauth-0.1.1.tar.gz][guile-oauth-0.1.1.tar.gz]]
+- [[http://download.savannah.gnu.org/releases/guile-oauth/guile-oauth-0.2.0.tar.gz][guile-oauth-0.2.0.tar.gz]]
 
 Then, run the typical sequence:
 
@@ -83,7 +83,7 @@ under the /examples/ directory.
     : > (define request-url "https://api.twitter.com/oauth/request_token")
     : > (define authorize-url "https://api.twitter.com/oauth/authorize")
     : > (define access-url "https://api.twitter.com/oauth/access_token")
-    : > (define home-timeline "http://api.twitter.com/1.1/statuses/home_timeline.json")
+    : > (define home-timeline "https://api.twitter.com/1.1/statuses/home_timeline.json")
     : > (define credentials (oauth1-credentials key secret))
 
   The /key/ and /secret/ are provided by Twitter once you register a
