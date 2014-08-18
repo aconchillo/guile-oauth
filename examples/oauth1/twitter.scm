@@ -1,4 +1,4 @@
-#!/usr/local/bin/guile -s
+#!/usr/bin/guile -s
 !#
 
 ;;; Guile OAuth client example.
@@ -161,11 +161,11 @@
 
 (define twitter-user-timeline-handler
   (twitter-tweets-handler
-   "http://api.twitter.com/1.1/statuses/user_timeline.json"))
+   "https://api.twitter.com/1.1/statuses/user_timeline.json"))
 
 (define twitter-home-timeline-handler
   (twitter-tweets-handler
-   "http://api.twitter.com/1.1/statuses/home_timeline.json"))
+   "https://api.twitter.com/1.1/statuses/home_timeline.json"))
 
 ;; Build a resource not found (404) response
 (define (not-found request)
