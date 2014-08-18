@@ -1,7 +1,7 @@
 #
 # configure.ac
 #
-# Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2013, 2014 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -27,7 +27,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([color-tests -Wall -Wno-portability])
 AM_SILENT_RULES([yes])
 
-GUILE_PROGS
+GUILE_PROGS([2.0.10])
 
 GUILE_MODULE_REQUIRED([json])
 GUILE_MODULE_REQUIRED([gnutls])

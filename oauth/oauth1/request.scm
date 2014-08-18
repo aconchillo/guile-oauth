@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 request) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013, 2014 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -139,7 +139,7 @@ Signature Base String is a consistent reproducible concatenation of the
         (uri (string->uri (oauth1-request-url request)))
         (params (oauth1-request-params request)))
     (string-join
-     (map (lambda (p) (oauth1-uri-encode p))
+     (map (lambda (p) (uri-encode p))
           (list (symbol->string method)
                 (signature-request-url uri)
                 (oauth1-normalized-params params)))

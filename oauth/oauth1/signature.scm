@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 signature) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013, 2014 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -27,9 +27,9 @@
 
 (define-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 credentials)
-  #:use-module (oauth oauth1 utils)
   #:use-module (rnrs bytevectors)
   #:use-module (srfi srfi-9)
+  #:use-module (web uri)
   #:use-module (weinholt crypto sha-1)
   #:use-module (weinholt text base64)
   #:export (oauth1-signature
@@ -50,9 +50,9 @@
 ;;
 
 (define (hmac-sha1-key credentials token)
-  (string-append (oauth1-uri-encode (oauth1-credentials-secret credentials))
+  (string-append (uri-encode (oauth1-credentials-secret credentials))
                  "&"
-                 (oauth1-uri-encode (oauth1-credentials-secret token))))
+                 (uri-encode (oauth1-credentials-secret token))))
 
 (define (hmac-sha1-signature base-string credentials token)
   (let ((key (hmac-sha1-key credentials token)))
@@ -64,7 +64,7 @@
    "HMAC-SHA1"
    (lambda (base-string credentials token)
      (let ((s (hmac-sha1-signature base-string credentials token)))
-       (oauth1-uri-encode (base64-encode s))))))
+       (uri-encode (base64-encode s))))))
 
 ;;
 ;; PLAINTEXT
@@ -77,4 +77,4 @@
   (oauth1-signature
    "PLAINTEXT"
    (lambda (base-string credentials token)
-     (oauth1-uri-encode (plaintext-signature credentials token)))))
+     (uri-encode (plaintext-signature credentials token)))))
