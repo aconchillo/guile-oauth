@@ -29,6 +29,7 @@
   #:use-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 utils)
   #:use-module (ice-9 format)
+  #:use-module (ice-9 match)
   #:use-module (srfi srfi-9)
   #:use-module (web uri)
   #:export (oauth1-request
@@ -95,16 +96,19 @@ must be an association list."
 
 (define (oauth1-request-http-headers request)
   "Obtain the HTTP headers for the given @var{request}. This is the
-Authorization header with all the list of @var{request} parameters."
-  (let* ((params (oauth1-request-params request))
+Authorization header with all the list of the OAuth @var{request}
+parameters."
+  (let* ((params (filter oauth1-param? (oauth1-request-params request)))
          (norm-params (oauth1-normalized-header-params params)))
     `((Authorization . ,(string-append "OAuth realm=\"\", " norm-params)))))
 
-(define (oauth1-request-http-url request)
+(define* (oauth1-request-http-url request #:key (param-filter
+                                                 (compose not oauth1-param?)))
   "Obtain the URI for the given @var{request}. The URI will contain all
-the @var{request} parameters as URI query arguments."
+the @var{request} parameters that satisfy @var{param-filter} as URI
+query arguments."
   (let* ((url (oauth1-request-url request))
-         (params (oauth1-request-params request))
+         (params (filter param-filter (oauth1-request-params request)))
          (norm-params (oauth1-normalized-params params)))
     (string-append url (if (null? params) "" "?") norm-params)))
 
@@ -169,7 +173,7 @@ Signature Base String is a consistent reproducible concatenation of the
   "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and
 parameters are already defined in the given @var{request}
 object. Currently, only the GET and POST methods are supported."
-  (let ((uri (string->uri (oauth1-request-url request)))
+  (let ((uri (string->uri (oauth1-request-http-url request)))
         (method (oauth1-request-method request))
         (headers (oauth1-request-http-headers request)))
     (case method

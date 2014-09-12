@@ -36,6 +36,7 @@
   #:use-module (web uri)
   #:export (oauth1-timestamp
             oauth1-nonce
+            oauth1-param?
             oauth1-normalized-params
             oauth1-normalized-header-params
             oauth1-parse-www-form-urlencoded
@@ -50,6 +51,13 @@ January 1970."
 (define (oauth1-nonce)
   "A random string"
   (date->string (current-date) "~s"))
+
+(define (oauth1-param? param)
+  "Returns true if this parameter pair is used by OAuth, and false
+otherwise.  Useful when filtering parameter lists."
+  (match param
+    ((k . v)
+     (string-prefix-ci? "oauth_" (if (symbol? k) (symbol->string k) k)))))
 
 (define (encode-and-sort-params params)
   (stable-sort
