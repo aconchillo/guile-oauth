@@ -1,7 +1,7 @@
 #
-# configure.ac
+# Makefile.am
 #
-# Copyright (C) 2013, 2014 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -21,24 +21,21 @@
 # 02110-1301 USA
 #
 
-AC_INIT([guile-oauth], [0.2.0], [aconchillo@gmail.com])
-AC_CONFIG_SRCDIR(oauth/oauth1.scm)
-AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([color-tests -Wall -Wno-portability])
-AM_SILENT_RULES([yes])
+moddir=$(prefix)/share/guile/site/oauth/utils
 
-GUILE_PROGS
+SOURCES = \
+  base64.scm \
+  sha-1.scm \
+  #
 
-GUILE_MODULE_REQUIRED([json])
-GUILE_MODULE_REQUIRED([gnutls])
+GOBJECTS = $(SOURCES:%.scm=%.go)
 
-AC_CONFIG_FILES([Makefile
-                 oauth/Makefile
-                 oauth/utils/Makefile
-                 oauth/oauth1/Makefile
-                 examples/Makefile])
-AC_CONFIG_FILES([env], [chmod +x env])
+nobase_mod_DATA = $(SOURCES) $(NOCOMP_SOURCES) $(GOBJECTS)
+EXTRA_DIST = $(SOURCES) $(NOCOMP_SOURCES)
 
-AC_OUTPUT
+CLEANFILES = $(GOBJECTS)
 
-# configure.ac ends here
+GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
+SUFFIXES = .scm .go
+.scm.go:
+	$(top_builddir)/env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -o "$@" "$<"
