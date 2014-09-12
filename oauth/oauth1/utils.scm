@@ -29,6 +29,7 @@
   #:use-module (gnutls)
   #:use-module (ice-9 binary-ports)
   #:use-module (ice-9 receive)
+  #:use-module (ice-9 match)
   #:use-module (rnrs bytevectors)
   #:use-module (srfi srfi-19)
   #:use-module (web client)
@@ -52,17 +53,20 @@ January 1970."
 
 (define (encode-and-sort-params params)
   (stable-sort
-   (map
-      (lambda (pair) (cons (uri-encode (symbol->string (car pair)))
-                           (uri-encode (cdr pair))))
-      (assq-remove! params 'oauth_signature))
-   (lambda (a b)
+   (let lp ((params params))
+     (match params
+       (() '())
+       ((('oauth_signature . _) . params) (lp params))
+       (((key . value) . params)
+        (acons (uri-encode (symbol->string key)) (uri-encode value) (lp params)))))
+   (match-lambda*
+    (((k1 . v1) (k2 . v2))
      (cond
       ;; If it's less, simply return true
-      ((string< (car a) (car b)) #t)
+      ((string< k1 k2) #t)
       ;; If it's equal, compare value
-      ((string= (car a) (car b)) (string< (cdr a) (cdr b)))
-      (else #f)))))
+      ((string= k1 k2) (string< v1 v2))
+      (else #f))))))
 
 (define (oauth1-normalized-params params)
   "Returns a normalized single string for the given @var{params}
