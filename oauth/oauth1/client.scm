@@ -73,7 +73,7 @@ browser."
       (oauth1-request-add-param request
                                 'oauth_token
                                 (oauth1-credentials-id token)))
-    (oauth1-request-http-url request)))
+    (oauth1-request-http-url request #:param-filter (lambda (_) #t))))
 
 (define* (oauth1-client-access-token url credentials token verifier
                                      #:key

@@ -21,7 +21,7 @@
 # 02110-1301 USA
 #
 
-SUBDIRS = oauth1
+SUBDIRS = utils oauth1
 
 moddir=$(prefix)/share/guile/site/oauth
 
