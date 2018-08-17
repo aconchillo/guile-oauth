@@ -30,8 +30,8 @@
   #:use-module (rnrs bytevectors)
   #:use-module (srfi srfi-9)
   #:use-module (web uri)
-  #:use-module (oauth utils sha-1)
-  #:use-module (oauth utils base64)
+  #:use-module (oauth hashing sha-1)
+  #:use-module (oauth industria base64)
   #:export (oauth1-signature
             oauth1-signature?
             oauth1-signature-method

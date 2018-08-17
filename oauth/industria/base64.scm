@@ -1,5 +1,5 @@
 ;; -*- mode: scheme; coding: utf-8 -*-
-;; Copyright © 2009, 2010, 2012, 2013 Göran Weinholt <goran@weinholt.se>
+;; Copyright © 2009, 2010, 2012, 2013, 2018 Göran Weinholt <goran@weinholt.se>
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a
 ;; copy of this software and associated documentation files (the "Software"),
@@ -22,7 +22,10 @@
 
 ;; RFC 4648 Base-N Encodings
 
-(library (oauth utils base64)
+;; TODO: The procedures in this API has too many arguments, it would
+;; be better if most were parameters.
+
+(library (oauth industria base64)
   (export base64-encode
           base64-decode
           base64-alphabet
@@ -122,8 +125,8 @@
           (set! table-alphabet alphabet))
         (values ascii-table extra-table))))
 
-  ;; Decodes a correctly padded base64 string, optionally ignoring
-  ;; non-alphabet characters.
+  ;; Decodes a base64 string, optionally ignoring non-alphabet
+  ;; characters and lack of padding.
   (define base64-decode
     (case-lambda
       ((str)
@@ -133,6 +136,8 @@
       ((str alphabet port)
        (base64-decode str alphabet port #t))
       ((str alphabet port strict?)
+       (base64-decode str alphabet port strict? #t))
+      ((str alphabet port strict? strict-padding?)
        (define (pad? c) (eqv? c (char->integer #\=)))
        (let-values (((p extract) (if port
                                      (values port (lambda () (values)))
@@ -143,83 +148,91 @@
              ((_ c) (or (and (fx<=? c 127) (vector-ref ascii c))
                         (cond ((assv c extra) => cdr)
                               (else #f))))))
-         (let* ((len (if strict?
-                         (string-length str)
-                         (let lp ((i (fx- (string-length str) 1)))
-                           ;; Skip trailing invalid chars.
-                           (cond ((fxzero? i) 0)
-                                 ((let ((c (char->integer (string-ref str i))))
-                                    (or (lookup c) (pad? c)))
-                                  (fx+ i 1))
-                                 (else (lp (fx- i 1))))))))
-           (let lp ((i 0))
-             (cond
-               ((fx=? i len)
-                (extract))
-               ((fx<=? i (fx- len 4))
-                (let lp* ((c1 (char->integer (string-ref str i)))
-                          (c2 (char->integer (string-ref str (fx+ i 1))))
-                          (c3 (char->integer (string-ref str (fx+ i 2))))
-                          (c4 (char->integer (string-ref str (fx+ i 3))))
-                          (i i))
-                  (let ((i1 (lookup c1)) (i2 (lookup c2))
-                        (i3 (lookup c3)) (i4 (lookup c4)))
-                    (cond
-                      ((and i1 i2 i3 i4)
-                       ;; All characters present and accounted for.
-                       ;; The most common case.
-                       (let ((x (fxior (fxarithmetic-shift-left i1 18)
-                                       (fxarithmetic-shift-left i2 12)
-                                       (fxarithmetic-shift-left i3 6)
-                                       i4)))
-                         (put-u8 p (fxbit-field x 16 24))
-                         (put-u8 p (fxbit-field x 8 16))
-                         (put-u8 p (fxbit-field x 0 8))
-                         (lp (fx+ i 4))))
-                      ((and i1 i2 i3 (pad? c4) (= i (- len 4)))
-                       ;; One padding character at the end of the input.
-                       (let ((x (fxior (fxarithmetic-shift-left i1 18)
-                                       (fxarithmetic-shift-left i2 12)
-                                       (fxarithmetic-shift-left i3 6))))
-                         (put-u8 p (fxbit-field x 16 24))
-                         (put-u8 p (fxbit-field x 8 16))
-                         (lp (fx+ i 4))))
-                      ((and i1 i2 (pad? c3) (pad? c4) (= i (- len 4)))
-                       ;; Two padding characters.
-                       (let ((x (fxior (fxarithmetic-shift-left i1 18)
-                                       (fxarithmetic-shift-left i2 12))))
-                         (put-u8 p (fxbit-field x 16 24))
-                         (lp (fx+ i 4))))
-                      ((not strict?)
-                       ;; Non-alphabet characters.
-                       (let lp ((i i) (c* '()) (n 4))
-                         (cond ((fxzero? n)
-                                ;; Found four valid characters.
-                                (lp* (cadddr c*) (caddr c*) (cadr c*) (car c*)
-                                     (fx- i 4)))
-                               ((fx=? i len)
-                                (error 'base64-decode
-                                       "Invalid input in non-strict mode."
-                                       i c*))
-                               (else
-                                ;; Gather alphabetic (or valid
-                                ;; padding) characters.
-                                (let ((c (char->integer (string-ref str i))))
-                                  (cond ((or (lookup c)
-                                             (and (pad? c)
-                                                  (fx<=? n 2)
-                                                  (fx=? i (fx- len n))))
-                                         (lp (fx+ i 1) (cons c c*) (fx- n 1)))
-                                        (else
-                                         (lp (fx+ i 1) c* n))))))))
-                      (else
-                       (error 'base64-decode
-                              "Invalid input in strict mode."
-                              c1 c2 c3 c4))))))
-               (else
-                (error 'base64-decode
-                       "The input is too short, it may be missing padding."
-                       i)))))))))
+         (let lp-restart ((str str))
+           (let* ((len (if strict?
+                           (string-length str)
+                           (let lp ((i (fx- (string-length str) 1)))
+                             ;; Skip trailing invalid chars.
+                             (cond ((fxzero? i) 0)
+                                   ((let ((c (char->integer (string-ref str i))))
+                                      (or (lookup c) (pad? c)))
+                                    (fx+ i 1))
+                                   (else (lp (fx- i 1))))))))
+             (let lp ((i 0))
+               (cond
+                 ((fx=? i len)
+                  (extract))
+                 ((fx<=? i (fx- len 4))
+                  (let lp* ((c1 (char->integer (string-ref str i)))
+                            (c2 (char->integer (string-ref str (fx+ i 1))))
+                            (c3 (char->integer (string-ref str (fx+ i 2))))
+                            (c4 (char->integer (string-ref str (fx+ i 3))))
+                            (i i))
+                    (let ((i1 (lookup c1)) (i2 (lookup c2))
+                          (i3 (lookup c3)) (i4 (lookup c4)))
+                      (cond
+                        ((and i1 i2 i3 i4)
+                         ;; All characters present and accounted for.
+                         ;; The most common case.
+                         (let ((x (fxior (fxarithmetic-shift-left i1 18)
+                                         (fxarithmetic-shift-left i2 12)
+                                         (fxarithmetic-shift-left i3 6)
+                                         i4)))
+                           (put-u8 p (fxbit-field x 16 24))
+                           (put-u8 p (fxbit-field x 8 16))
+                           (put-u8 p (fxbit-field x 0 8))
+                           (lp (fx+ i 4))))
+                        ((and i1 i2 i3 (pad? c4) (= i (- len 4)))
+                         ;; One padding character at the end of the input.
+                         (let ((x (fxior (fxarithmetic-shift-left i1 18)
+                                         (fxarithmetic-shift-left i2 12)
+                                         (fxarithmetic-shift-left i3 6))))
+                           (put-u8 p (fxbit-field x 16 24))
+                           (put-u8 p (fxbit-field x 8 16))
+                           (lp (fx+ i 4))))
+                        ((and i1 i2 (pad? c3) (pad? c4) (= i (- len 4)))
+                         ;; Two padding characters.
+                         (let ((x (fxior (fxarithmetic-shift-left i1 18)
+                                         (fxarithmetic-shift-left i2 12))))
+                           (put-u8 p (fxbit-field x 16 24))
+                           (lp (fx+ i 4))))
+                        ((not strict?)
+                         ;; Non-alphabet characters.
+                         (let lp ((i i) (c* '()) (n 4))
+                           (cond ((fxzero? n)
+                                  ;; Found four valid characters.
+                                  (lp* (cadddr c*) (caddr c*) (cadr c*) (car c*)
+                                       (fx- i 4)))
+                                 ((fx=? i len)
+                                  (error 'base64-decode
+                                         "Invalid input in non-strict mode."
+                                         i c*))
+                                 (else
+                                  ;; Gather alphabetic (or valid
+                                  ;; padding) characters.
+                                  (let ((c (char->integer (string-ref str i))))
+                                    (cond ((or (lookup c)
+                                               (and (pad? c)
+                                                    (fx<=? n 2)
+                                                    (fx=? i (fx- len n))))
+                                           (lp (fx+ i 1) (cons c c*) (fx- n 1)))
+                                          (else
+                                           (lp (fx+ i 1) c* n))))))))
+                        (else
+                         (error 'base64-decode
+                                "Invalid input in strict mode."
+                                c1 c2 c3 c4))))))
+                 ((not strict-padding?)
+                  ;; Append an appropriate amount of padding after the
+                  ;; remaining characters.
+                  (if (<= 2 (- len i) 3)
+                      (lp-restart (string-append (substring str i (string-length str))
+                                                 (if (= (- len i) 2) "==" "=")))
+                      (error 'base64-decode "The input is too short." i)))
+                 (else
+                  (error 'base64-decode
+                         "The input is too short, it may be missing padding."
+                         i))))))))))
 
   (define (get-line-comp f port)
     (if (port-eof? port)

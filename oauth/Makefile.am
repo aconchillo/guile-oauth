@@ -1,7 +1,7 @@
 #
 # Makefile.am
 #
-# Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -21,9 +21,10 @@
 # 02110-1301 USA
 #
 
-SUBDIRS = utils oauth1
+SUBDIRS = hashing industria oauth1
 
-moddir=$(prefix)/share/guile/site/oauth
+moddir = $(datadir)/guile/site/@GUILE_EFFECTIVE_VERSION@
+objdir = $(libdir)/guile/@GUILE_EFFECTIVE_VERSION@/site-ccache
 
 SOURCES = oauth1.scm
 

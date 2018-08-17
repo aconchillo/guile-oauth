@@ -1,7 +1,7 @@
 #
 # Makefile.am
 #
-# Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -21,12 +21,10 @@
 # 02110-1301 USA
 #
 
-moddir=$(prefix)/share/guile/site/oauth/utils
+moddir = $(datadir)/guile/site/@GUILE_EFFECTIVE_VERSION@/oauth/industria
+objdir = $(libdir)/guile/@GUILE_EFFECTIVE_VERSION@/site-ccache/oauth/industria
 
-SOURCES = \
-  base64.scm \
-  sha-1.scm \
-  #
+SOURCES = base64.scm
 
 GOBJECTS = $(SOURCES:%.scm=%.go)
 

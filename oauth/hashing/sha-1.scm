@@ -1,53 +1,45 @@
 ;; -*- mode: scheme; coding: utf-8 -*-
-;; Copyright © 2009, 2010, 2012 Göran Weinholt <goran@weinholt.se>
-
-;; Permission is hereby granted, free of charge, to any person obtaining a
-;; copy of this software and associated documentation files (the "Software"),
-;; to deal in the Software without restriction, including without limitation
-;; the rights to use, copy, modify, merge, publish, distribute, sublicense,
-;; and/or sell copies of the Software, and to permit persons to whom the
-;; Software is furnished to do so, subject to the following conditions:
-
-;; The above copyright notice and this permission notice shall be included in
-;; all copies or substantial portions of the Software.
-
-;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-;; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-;; THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-;; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-;; DEALINGS IN THE SOFTWARE.
+;; Copyright © 2009, 2010, 2012, 2017, 2018 Göran Weinholt <goran@weinholt.se>
+;; SPDX-License-Identifier: MIT
 #!r6rs
 
 ;; Byte-oriented SHA-1 from FIPS 180-3 and RFC 3174.
 
+;; SHA-1 is not recommended for use in new designs!
+
 ;; The data being hashed will never be modified here.
 
 ;; TODO: give an error if more than 2^64 bits are processed?
-;; TODO: Optimize. Should be simple enough with the help of a profiler.
 
-(library (oauth utils sha-1)
-  (export make-sha-1 sha-1-update! sha-1-finish! sha-1-clear!
-          sha-1 sha-1-copy sha-1-finish
-          sha-1-transform!              ;for interested parties only
-          sha-1-length
-          sha-1-copy-hash! sha-1-96-copy-hash!
-          sha-1->bytevector sha-1->string
-          sha-1-hash=? sha-1-96-hash=?
-          hmac-sha-1)
-  (import (except (rnrs) bitwise-rotate-bit-field))
+(library (oauth hashing sha-1)
+  (export
+    make-sha-1 sha-1-update! sha-1-finish! sha-1-clear!
+    sha-1 sha-1-copy sha-1-finish
+    sha-1-transform!                    ;for interested parties only
+    sha-1-length
+    sha-1-copy-hash! sha-1-96-copy-hash!
+    sha-1->bytevector sha-1->string
+    sha-1-hash=? sha-1-96-hash=?
+    hmac-sha-1)
+  (import
+    (rnrs (6))
+    (rnrs mutable-strings (6))
+    (hashing fixnums))
+
+  (define-fixnum-procedures f32 33)
 
   (define (sha-1-length) 20)
 
   (define (vector-copy x) (vector-map (lambda (i) i) x))
 
   (define (rol32 n count)
-    (let ((field1 (bitwise-and #xffffffff (bitwise-arithmetic-shift-left n count)))
-          (field2 (bitwise-arithmetic-shift-right n (- 32 count))))
-      (bitwise-ior field1 field2)))
+    (f32ior (f32arithmetic-shift-left (f32bit-field n 0 (fx- 32 count))
+                                      count)
+            (f32arithmetic-shift-right n (fx- 32 count))))
 
   (define-record-type sha1state
+    (nongenerative sha1state-v1-aa10bd6c-d745-4ca3-86ea-9495bddfcdb9)
+    (sealed #t)
     (fields (immutable H)               ;Hash
             (immutable W)               ;temporary data
             (immutable m)               ;unprocessed data
@@ -55,75 +47,78 @@
             (mutable processed)))       ;length of processed data
 
   (define (make-sha-1)
-    (let ((H (list->vector initial-hash))
-          (W (make-bytevector (* 4 80)))
+    (let ((H (vector-copy initial-hash))
+          (W (make-vector 80 #f))
           (m (make-bytevector (* 4 16))))
       (make-sha1state H W m 0 0)))
 
   (define (sha-1-copy state)
     (let ((H (vector-copy (sha1state-H state)))
-          (W (make-bytevector (* 4 80)))
+          (W (make-vector 80 #f))
           (m (bytevector-copy (sha1state-m state))))
       (make-sha1state H W m
                       (sha1state-pending state)
                       (sha1state-processed state))))
 
   (define (sha-1-clear! state)
-    (for-each (lambda (i v)
-                (vector-set! (sha1state-H state) i v))
-              '(0 1 2 3 4)
-              initial-hash)
-    (bytevector-fill! (sha1state-W state) 0)
+    (vector-for-each (lambda (i v)
+                       (vector-set! (sha1state-H state) i v))
+                     '#(0 1 2 3 4)
+                     initial-hash)
+    (vector-fill! (sha1state-W state) #f)
     (bytevector-fill! (sha1state-m state) 0)
     (sha1state-pending-set! state 0)
     (sha1state-processed-set! state 0))
 
-  (define initial-hash '(#x67452301 #xefcdab89 #x98badcfe #x10325476 #xc3d2e1f0))
+  (define initial-hash '#(#x67452301 #xefcdab89 #x98badcfe #x10325476 #xc3d2e1f0))
 
-  (define (Ch x y z)
-    (bitwise-xor (bitwise-and x y)
-                 (bitwise-and (bitwise-not x) z)))
-
-  (define Parity bitwise-xor)
-
-  (define (Maj x y z)
-    (bitwise-xor (bitwise-and x y)
-                 (bitwise-and x z)
-                 (bitwise-and y z)))
-
-  (define k1 #x5a827999)
-  (define k2 #x6ed9eba1)
-  (define k3 #x8f1bbcdc)
-  (define k4 #xca62c1d6)
-
-  (define (f t B C D)
-    ((cond ((<= 0 t 19) Ch)
-           ((<= 20 t 39) Parity)
-           ((<= 40 t 59) Maj)
-           (else Parity))
-     B C D))
-
-  (define (K t)
-    (cond ((<= 0 t 19) k1)
-          ((<= 20 t 39) k2)
-          ((<= 40 t 59) k3)
-          (else k4)))
+  (define k '#(#x5A827999 #x5A827999 #x5A827999 #x5A827999 #x5A827999
+               #x5A827999 #x5A827999 #x5A827999 #x5A827999 #x5A827999
+               #x5A827999 #x5A827999 #x5A827999 #x5A827999 #x5A827999
+               #x5A827999 #x5A827999 #x5A827999 #x5A827999 #x5A827999
+               #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1
+               #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1
+               #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1
+               #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1 #x6ED9EBA1
+               #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC
+               #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC
+               #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC
+               #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC #x8F1BBCDC
+               #xCA62C1D6 #xCA62C1D6 #xCA62C1D6 #xCA62C1D6 #xCA62C1D6
+               #xCA62C1D6 #xCA62C1D6 #xCA62C1D6 #xCA62C1D6 #xCA62C1D6
+               #xCA62C1D6 #xCA62C1D6 #xCA62C1D6 #xCA62C1D6 #xCA62C1D6
+               #xCA62C1D6 #xCA62C1D6 #xCA62C1D6 #xCA62C1D6 #xCA62C1D6))
 
   ;; This function transforms a whole 512 bit block.
   (define (sha-1-transform! H W m offset)
+    (define (Ch x y z)
+      (f32xor (f32and x y)
+              (f32and (f32not x) z)))
+    (define Parity f32xor)
+    (define (Maj x y z)
+      (f32xor (f32and x y)
+              (f32and x z)
+              (f32and y z)))
+    (define (f t B C D)
+      (cond ((fx<=? 0 t 19) (Ch B C D))
+            ((fx<=? 20 t 39) (Parity B C D))
+            ((fx<=? 40 t 59) (Maj B C D))
+            (else (Parity B C D))))
+    (define (K t)
+      (vector-ref k t))
     ;; Copy the message block
-    (do ((t 0 (+ t 4)))
-        ((= t (* 4 16)))
-      (bytevector-u32-native-set! W t (bytevector-u32-ref m (+ t offset) (endianness big))))
+    (do ((t 0 (fx+ t 1)))
+        ((fx=? t 16))
+      (vector-set! W t (bytevector-u32-ref m (fx+ (fx* t 4) offset) (endianness big))))
     ;; Initialize W[16..79]
-    (do ((t (* 4 16) (+ t 4)))
-        ((= t (* 4 80)))
-      (bytevector-u32-native-set! W t (rol32
-                                       (bitwise-xor (bytevector-u32-native-ref W (- t (* 4 3)))
-                                                    (bytevector-u32-native-ref W (- t (* 4 8)))
-                                                    (bytevector-u32-native-ref W (- t (* 4 14)))
-                                                    (bytevector-u32-native-ref W (- t (* 4 16))))
-                                       1)))
+    (do ((t 16 (fx+ t 1)))
+        ((fx=? t 80))
+      (vector-set! W t (rol32
+                        (f32xor (vector-ref W (fx- t 3))
+                                (vector-ref W (fx- t 8))
+                                (vector-ref W (fx- t 14))
+                                (vector-ref W (fx- t 16)))
+                        1)))
     ;; Do the hokey pokey
     (let lp ((A (vector-ref H 0))
              (B (vector-ref H 1))
@@ -131,24 +126,24 @@
              (D (vector-ref H 3))
              (E (vector-ref H 4))
              (t 0))
-      (cond ((= t 80)
-             (vector-set! H 0 (bitwise-and #xffffffff (+ A (vector-ref H 0))))
-             (vector-set! H 1 (bitwise-and #xffffffff (+ B (vector-ref H 1))))
-             (vector-set! H 2 (bitwise-and #xffffffff (+ C (vector-ref H 2))))
-             (vector-set! H 3 (bitwise-and #xffffffff (+ D (vector-ref H 3))))
-             (vector-set! H 4 (bitwise-and #xffffffff (+ E (vector-ref H 4)))))
+      (cond ((fx=? t 80)
+             (vector-set! H 0 (f32and #xffffffff (f32+ A (vector-ref H 0))))
+             (vector-set! H 1 (f32and #xffffffff (f32+ B (vector-ref H 1))))
+             (vector-set! H 2 (f32and #xffffffff (f32+ C (vector-ref H 2))))
+             (vector-set! H 3 (f32and #xffffffff (f32+ D (vector-ref H 3))))
+             (vector-set! H 4 (f32and #xffffffff (f32+ E (vector-ref H 4)))))
             (else
-             (lp (bitwise-and #xffffffff
-                              (+ (rol32 A 5)
-                                 (f t B C D)
-                                 E
-                                 (bytevector-u32-native-ref W (* 4 t))
-                                 (K t)))
+             (lp (f32and #xffffffff
+                         (f32+ (f32+ (rol32 A 5)
+                                     (f t B C D))
+                               (f32+ (f32+ E
+                                           (vector-ref W t))
+                                     (K t))))
                  A
                  (rol32 B 30)
                  C
                  D
-                 (+ t 1))))))
+                 (fx+ t 1))))))
 
   ;; Add a bytevector to the state. Align your data to whole blocks if
   ;; you want this to go a little faster.
@@ -249,12 +244,16 @@
       ret))
 
   (define (sha-1->string state)
-    (apply string-append
-           (map (lambda (x)
-                  (if (< x #x10)
-                      (string-append "0" (number->string x 16))
-                      (number->string x 16)))
-                (bytevector->u8-list (sha-1->bytevector state)))))
+    (define hex "0123456789abcdef")
+    (do ((ret (make-string 40))
+         (H (sha1state-H state))
+         (i 0 (fx+ i 1)))
+        ((fx=? i 40) ret)
+      (let ((n (bitwise-and (bitwise-arithmetic-shift-right
+                             (vector-ref H (fxarithmetic-shift-right i 3))
+                             (fx- 28 (fx* 4 (fxand i #b111))))
+                            #xf)))
+        (string-set! ret i (string-ref hex n)))))
 
   ;; Compare an SHA-1 state with a bytevector. It is supposed to not
   ;; terminate early in order to not leak timing information. Assumes
