@@ -23,8 +23,8 @@
 
 SUBDIRS = hashing industria oauth1
 
-moddir = $(datadir)/guile/site/@GUILE_EFFECTIVE_VERSION@
-objdir = $(libdir)/guile/@GUILE_EFFECTIVE_VERSION@/site-ccache
+moddir = $(datadir)/guile/site/@GUILE_EFFECTIVE_VERSION@/oauth
+objdir = $(libdir)/guile/@GUILE_EFFECTIVE_VERSION@/site-ccache/oauth
 
 SOURCES = oauth1.scm
 

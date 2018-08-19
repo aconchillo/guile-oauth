@@ -27,6 +27,13 @@ AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([color-tests -Wall -Wno-portability])
 AM_SILENT_RULES([yes])
 
+dnl We require pkg.m4 (from pkg-config) and guile.m4 (from Guile.)
+dnl Make sure they are available.
+m4_pattern_forbid([PKG_CHECK_MODULES])
+m4_pattern_forbid([^GUILE_PKG])
+
+dnl Check for Guile 2.x, and substitute 'GUILE_EFFECTIVE_VERSION'.
+GUILE_PKG([2.2 2.0])
 GUILE_PROGS
 
 GUILE_MODULE_REQUIRED([json])
