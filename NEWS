@@ -1,4 +1,14 @@
 
+* Version 0.3.0 (Aug 19, 2018)
+
+  - Use http-get and http-post directly (GnuTLS is used internally). Requires
+    guile >= 2.2.0.
+
+  - Updated base64 and sha-1 to latest versions.
+
+  - Make sure we can read the body from strings or bytevectors.
+
+
 * Version 0.2.0 (Aug 18, 2014)
 
   - Use uri-encode from guile >= 2.0.10.

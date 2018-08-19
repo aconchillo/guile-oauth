@@ -20,7 +20,7 @@ Lesser General Public License version 3 (LGPLv3+).
 
 Download the latest tarball and untar it:
 
-- [[http://download.savannah.gnu.org/releases/guile-oauth/guile-oauth-0.2.0.tar.gz][guile-oauth-0.2.0.tar.gz]]
+- [[http://download.savannah.gnu.org/releases/guile-oauth/guile-oauth-0.3.0.tar.gz][guile-oauth-0.3.0.tar.gz]]
 
 If you are cloning the repository make sure you run this first:
 
