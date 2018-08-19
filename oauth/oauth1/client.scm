@@ -53,7 +53,7 @@ additional parameters can be given in @var{params}."
   (let ((token (oauth1-credentials "" ""))
         (request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
-    (oauth1-request-add-param request 'oauth_callback (uri-encode callback))
+    (oauth1-request-add-param request 'oauth_callback callback)
     (oauth1-request-add-param request
                               'oauth_consumer_key
                               (oauth1-credentials-id credentials))
