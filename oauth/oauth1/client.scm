@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 client) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -32,6 +32,7 @@
   #:use-module (oauth oauth1 utils)
   #:use-module (ice-9 receive)
   #:use-module (rnrs bytevectors)
+  #:use-module (web uri)
   #:export (oauth1-client-request-token
             oauth1-client-authorize-url
             oauth1-client-access-token
@@ -117,4 +118,6 @@ parameters can be given in @var{params}."
     (oauth1-request-sign request credentials token #:signature signature)
     (receive (response body)
         (oauth1-http-request request)
-      (utf8->string body))))
+      (if (string? body) body (utf8->string body)))))
+
+;;; (oauth oauth1 client) ends here

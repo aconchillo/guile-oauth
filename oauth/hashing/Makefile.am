@@ -24,7 +24,7 @@
 moddir = $(datadir)/guile/site/@GUILE_EFFECTIVE_VERSION@/oauth/hashing
 objdir = $(libdir)/guile/@GUILE_EFFECTIVE_VERSION@/site-ccache/oauth/hashing
 
-SOURCES = sha-1.scm
+SOURCES = fixnums.scm sha-1.scm
 
 GOBJECTS = $(SOURCES:%.scm=%.go)
 

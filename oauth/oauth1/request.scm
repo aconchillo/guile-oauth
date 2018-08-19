@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 request) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013, 2014 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -31,6 +31,7 @@
   #:use-module (ice-9 format)
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-9)
+  #:use-module (web client)
   #:use-module (web uri)
   #:export (oauth1-request
             oauth1-request?
@@ -177,6 +178,8 @@ object. Currently, only the GET and POST methods are supported."
         (method (oauth1-request-method request))
         (headers (oauth1-request-http-headers request)))
     (case method
-      ((GET) (oauth1-http-get uri headers))
-      ((POST) (oauth1-http-post uri headers))
+      ((GET) (http-get uri #:headers headers))
+      ((POST) (http-post uri #:headers headers))
       (else throw 'oauth-invalid-method))))
+
+;;; (oauth oauth1 request) ends here

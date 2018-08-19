@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 signature) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013, 2014 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -78,3 +78,5 @@
    "PLAINTEXT"
    (lambda (base-string credentials token)
      (uri-encode (plaintext-signature credentials token)))))
+
+;;; (oauth oauth1 signature) ends here

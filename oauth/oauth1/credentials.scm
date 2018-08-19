@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 credentials) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -27,6 +27,7 @@
 
 (define-module (oauth oauth1 credentials)
   #:use-module (oauth oauth1 utils)
+  #:use-module (rnrs bytevectors)
   #:use-module (srfi srfi-9)
   #:export (oauth1-credentials
             oauth1-credentials?
@@ -46,6 +47,9 @@ secret defined in the given HTTP response @var{body}. The token
 credentials are included using the 'application/x-www-form-urlencoded'
 content type and obtained with the 'oauth_token' and
 'oauth_token_secret' parameters respectively."
-  (let ((params (oauth1-parse-www-form-urlencoded body)))
+  (let* ((str-body (if (string? body) body (utf8->string body)))
+         (params (oauth1-parse-www-form-urlencoded str-body)))
     (oauth1-credentials (assoc-ref params "oauth_token")
                         (assoc-ref params "oauth_token_secret"))))
+
+;;; (oauth oauth1 credentials) ends here

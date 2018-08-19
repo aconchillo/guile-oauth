@@ -24,7 +24,7 @@
   (import
     (rnrs (6))
     (rnrs mutable-strings (6))
-    (hashing fixnums))
+    (oauth hashing fixnums))
 
   (define-fixnum-procedures f32 33)
 

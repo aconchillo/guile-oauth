@@ -1,6 +1,6 @@
 ;;; (oauth oauth1) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -48,4 +48,4 @@
                    (oauth oauth1 signature)
                    (oauth oauth1 utils))
 
-;;; (oauth) ends here
+;;; (oauth oauth1) ends here

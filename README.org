@@ -5,12 +5,11 @@ guile-oauth is a simple OAuth client module for Guile. It supports the
 following features:
 
 - OAuth 1.0 ([[http://tools.ietf.org/html/rfc5849][RFC 5849]]) protocol support.
-- HTTP and HTTPS.
 - HMAC-SHA1 and PLAINTEXT signatures.
 
 It depends on the following Guile version and modules:
 
-- [[http://www.gnu.org/software/guile/][Guile]] >= 2.0.10.
+- [[http://www.gnu.org/software/guile/][Guile]] >= 2.2.0.
 - [[http://www.gnutls.org/][GnuTLS]] Guile bindings (for HTTPS support).
 
 
@@ -112,9 +111,9 @@ under the /examples/ directory.
 
 - Get your tweets:
 
-    : > (define result (oauth1-client-request home-timeline credentials access-token)
+    : > (define result (oauth1-client-request home-timeline credentials access-token))
 
 - Parse the tweets with JSON and get a list of user/tweet pairs:
 
     : > (define tweets (json-string->scm result))
-    : > (map (lambda (tweet) (cons (hash-ref tweet "user") (hash-ref twee "text"))) tweets)
+    : > (map (lambda (tweet) (cons (hash-ref tweet "user") (hash-ref tweet "text"))) tweets)
