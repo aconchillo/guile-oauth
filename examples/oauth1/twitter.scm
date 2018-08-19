@@ -1,9 +1,9 @@
-#!/usr/bin/guile -s
+#!/usr/bin/env guile -s
 !#
 
 ;;; Guile OAuth client example.
 
-;; Copyright (C) 2013 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -93,16 +93,16 @@
 (define (twitter-authenticate)
   (let ((callback "http://localhost:8080/twitter/access"))
     (set! *request-token*
-          (oauth1-client-request-token *twitter-request-url*
-                                       *twitter-credentials*
-                                       callback))
+      (oauth1-client-request-token *twitter-request-url*
+                                   *twitter-credentials*
+                                   callback))
     (oauth1-client-authorize-url *twitter-auth-url* *request-token*)))
 
 (define (twitter-auth request body)
   (let ((params (oauth1-parse-www-form-urlencoded (utf8->string body))))
     (set! *twitter-credentials*
-          (oauth1-credentials (assoc-ref params "key")
-                              (assoc-ref params "secret")))
+      (oauth1-credentials (assoc-ref params "key")
+                          (assoc-ref params "secret")))
     (set! *twitter-request-url* (assoc-ref params "request"))
     (set! *twitter-auth-url* (assoc-ref params "auth"))
     (set! *twitter-access-url* (assoc-ref params "access"))
@@ -119,15 +119,15 @@
   (let ((location "http://localhost:8080/twitter/home_timeline")
         (verifier (request-query-ref request "oauth_verifier")))
     (set! *access-token*
-          (oauth1-client-access-token *twitter-access-url*
-                                      *twitter-credentials*
-                                      *request-token*
-                                      verifier))
+      (oauth1-client-access-token *twitter-access-url*
+                                  *twitter-credentials*
+                                  *request-token*
+                                  verifier))
     (values (build-response
-           #:code 302
-           #:headers `((content-type . (text/html))
-                       (location . ,(string->uri location))))
-          (lambda (port) #nil))))
+             #:code 302
+             #:headers `((content-type . (text/html))
+                         (location . ,(string->uri location))))
+            (lambda (port) #nil))))
 
 (define (twitter-timeline-html json)
   (let ((tweets (json-string->scm json)))
