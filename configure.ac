@@ -1,7 +1,7 @@
 #
 # configure.ac
 #
-# Copyright (C) 2013, 2014 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -33,7 +33,7 @@ m4_pattern_forbid([PKG_CHECK_MODULES])
 m4_pattern_forbid([^GUILE_PKG])
 
 dnl Check for Guile 2.x, and substitute 'GUILE_EFFECTIVE_VERSION'.
-GUILE_PKG([2.2 2.0])
+GUILE_PKG([2.2])
 GUILE_PROGS
 
 GUILE_MODULE_REQUIRED([json])
