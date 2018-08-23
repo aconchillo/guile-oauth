@@ -15,9 +15,6 @@ It depends on the following Guile version and modules:
 
 * Installation
 
-guile-oauth is freely available for download under the terms of the GNU
-Lesser General Public License version 3 (LGPLv3+).
-
 Download the latest tarball and untar it:
 
 - [[http://download.savannah.gnu.org/releases/guile-oauth/guile-oauth-0.3.0.tar.gz][guile-oauth-0.3.0.tar.gz]]
@@ -117,3 +114,16 @@ under the /examples/ directory.
 
     : > (define tweets (json-string->scm result))
     : > (map (lambda (tweet) (cons (hash-ref tweet "user") (hash-ref tweet "text"))) tweets)
+
+
+* License
+
+guile-oauth is freely available for download under the terms of the GNU
+General Public License version 3 (GPLv3).
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.  This file is offered as-is,
+without any warranty.
+
+Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
