@@ -19,7 +19,7 @@
 # along with guile-oauth. If not, see https://www.gnu.org/licenses/.
 #
 
-AC_INIT([guile-oauth], [0.4.0], [aconchillo@gmail.com])
+AC_INIT([guile-oauth], [0.5.0], [aconchillo@gmail.com])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_SRCDIR(oauth/oauth1.scm)
 AC_CONFIG_AUX_DIR([build-aux])
