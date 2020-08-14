@@ -4,13 +4,15 @@
 guile-oauth is a simple OAuth client module for Guile. It supports the
 following features:
 
-- OAuth 1.0 ([[http://tools.ietf.org/html/rfc5849][RFC 5849]]) protocol support.
-- HMAC-SHA1 and PLAINTEXT signatures.
+- OAuth 1.0a ([[http://tools.ietf.org/html/rfc5849][RFC 5849]]) protocol
+  support with HMAC-SHA1 and PLAINTEXT signatures.
 
 It depends on the following Guile version and modules:
 
-- [[http://www.gnu.org/software/guile/][Guile]] >= 2.2.0.
-- [[http://www.gnutls.org/][GnuTLS]] Guile bindings (for HTTPS support).
+- [[https://www.gnu.org/software/guile/][Guile]] >= 2.2.0.
+- [[https://www.gnutls.org/][GnuTLS]] Guile bindings (for HTTPS support).
+- [[https://github.com/aconchillo/guile-json/][guile-json]] >= 3.0.0.
+- [[https://notabug.org/cwebber/guile-gcrypt/][guile-gcrypt]] >= 0.3.0.
 
 
 * Installation
@@ -73,9 +75,9 @@ The following example details how to obtain the tweets of your Twitter
 home timeline. The complete example is available as a web application
 under the /examples/ directory.
 
-- Load the OAuth and JSON modules:
+- Load the OAuth module:
 
-    : > (use-modules (oauth oauth1) (json))
+    : > (use-modules (oauth oauth1))
 
 - Define our Twitter URLs and application credentials:
 
@@ -83,7 +85,7 @@ under the /examples/ directory.
     : > (define authorize-url "https://api.twitter.com/oauth/authorize")
     : > (define access-url "https://api.twitter.com/oauth/access_token")
     : > (define home-timeline "https://api.twitter.com/1.1/statuses/home_timeline.json")
-    : > (define credentials (oauth1-credentials key secret))
+    : > (define credentials (oauth1-credentials "key" "secret"))
 
   The /key/ and /secret/ are provided by Twitter once you register a
   new application at https://dev.twitter.com.
@@ -102,28 +104,27 @@ under the /examples/ directory.
 - Obtain the access token that will allow us to access protected resources:
 
     : > (define access-token
-    :     (oauth1-client-access-token access-url credentials request-token verifier))
+    :     (oauth1-client-access-token access-url credentials request-token "verifier"))
 
   The /verifier/ is the string given by Twitter in the previous step.
 
 - Get your tweets:
 
-    : > (define result (oauth1-client-request home-timeline credentials access-token))
-
-- Parse the tweets with JSON and get a list of user/tweet pairs:
-
-    : > (define tweets (json-string->scm result))
-    : > (map (lambda (tweet) (cons (hash-ref tweet "user") (hash-ref tweet "text"))) tweets)
-
+    : > (oauth1-client-request home-timeline credentials access-token)
 
 * License
 
-guile-oauth is freely available for download under the terms of the GNU
-General Public License version 3 (GPLv3).
+Copyright (C) 2013-2020 Aleix Conchillo Flaqué <aconchillo@gmail.com>
 
-Copying and distribution of this file, with or without modification,
-are permitted in any medium without royalty provided the copyright
-notice and this notice are preserved.  This file is offered as-is,
-without any warranty.
+guile-oauth is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 3 of the License, or (at your
+option) any later version.
 
-Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
+guile-oauth is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with guile-oauth. If not, see https://www.gnu.org/licenses/.
