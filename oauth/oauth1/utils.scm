@@ -31,8 +31,9 @@
   #:export (oauth1-timestamp
             oauth1-nonce
             oauth1-param?
+            oauth1-query-params
             oauth1-normalized-params
-            oauth1-normalized-header-params
+            oauth1-authorization-header-params
             oauth1-parse-www-form-urlencoded))
 
 (define (oauth1-timestamp)
@@ -68,22 +69,32 @@ otherwise.  Useful when filtering parameter lists."
       ((string= k1 k2) (string< v1 v2))
       (else #f))))))
 
+(define (oauth1-query-params params)
+  "Returns a URI query string for the given @var{params} association list."
+  (string-join
+   (map (lambda (p) (string-append (uri-encode (symbol->string (car p)))
+                                   "="
+                                   (uri-encode (cdr p))))
+        params)
+   "&"))
+
 (define (oauth1-normalized-params params)
   "Returns a normalized single string for the given @var{params}
-association list, according to the Parameters Normalization section of
-the RFC 5849."
+association list, according to the Normalize Request Parameters section
+of the RFC 5849."
   (string-join
    (map (lambda (p) (string-append (car p) "=" (cdr p)))
         (encode-and-sort-params params))
    "&"))
 
-(define (oauth1-normalized-header-params params)
+(define (oauth1-authorization-header-params params)
   "Returns a normalized single string for the given @var{params}
 association list, according to the Authorization Header section of the
 RFC 5849."
   (string-join
-   (map (lambda (p) (string-append (symbol->string (car p))
-                                   "=\"" (cdr p) "\""))
+   (map (lambda (p) (string-append (uri-encode (symbol->string (car p)))
+                                   "=\""
+                                   (uri-encode (cdr p)) "\""))
         params)
    ", "))
 

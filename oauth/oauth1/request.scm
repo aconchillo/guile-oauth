@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 request) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -98,8 +98,8 @@ must be an association list."
 Authorization header with all the list of the OAuth @var{request}
 parameters."
   (let* ((params (filter oauth1-param? (oauth1-request-params request)))
-         (norm-params (oauth1-normalized-header-params params)))
-    `((Authorization . ,(string-append "OAuth realm=\"\", " norm-params)))))
+         (header-params (oauth1-authorization-header-params params)))
+    `((Authorization . ,(string-append "OAuth " header-params)))))
 
 (define* (oauth1-request-http-url request #:key (param-filter
                                                  (compose not oauth1-param?)))
@@ -108,8 +108,8 @@ the @var{request} parameters that satisfy @var{param-filter} as URI
 query arguments."
   (let* ((url (oauth1-request-url request))
          (params (filter param-filter (oauth1-request-params request)))
-         (norm-params (oauth1-normalized-params params)))
-    (string-append url (if (null? params) "" "?") norm-params)))
+         (query-params (oauth1-query-params params)))
+    (string-append url (if (null? params) "" "?") query-params)))
 
 ;;
 ;; Signing request
