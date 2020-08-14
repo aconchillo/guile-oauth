@@ -3,7 +3,7 @@
 
 ;;; Guile OAuth client example.
 
-;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -30,6 +30,7 @@
              (oauth oauth1)
              (ice-9 receive)
              (sxml simple)
+             (srfi srfi-43)
              (rnrs bytevectors)
              (web server)
              (web request)
@@ -58,7 +59,7 @@
 (define (twitter-main-editing-form)
   `(div
     (form (@ (method "POST")
-             (action "http://localhost:8080/twitter/auth"))
+             (action "http://127.0.0.1:8080/twitter/auth"))
           (p (label (@ (for "key")) "Consumer key: ")
              (input (@ (name "key") (type "text") (size "50")
                        (value ""))))
@@ -89,7 +90,7 @@
             (sxml->xml (twitter-main-form request body) port))))
 
 (define (twitter-authenticate)
-  (let ((callback "http://localhost:8080/twitter/access"))
+  (let ((callback "http://127.0.0.1:8080/twitter/access"))
     (set! *request-token*
       (oauth1-client-request-token *twitter-request-url*
                                    *twitter-credentials*
@@ -114,7 +115,7 @@
           (lambda (port) #nil)))
 
 (define (twitter-access-handler request body)
-  (let ((location "http://localhost:8080/twitter/home_timeline")
+  (let ((location "http://127.0.0.1:8080/twitter/home_timeline")
         (verifier (request-query-ref request "oauth_verifier")))
     (set! *access-token*
       (oauth1-client-access-token *twitter-access-url*
@@ -132,18 +133,18 @@
     `(html
       (head (title ,title))
       (body
-       "(" (a (@ (href "http://localhost:8080/twitter/home_timeline"))
+       "(" (a (@ (href "http://127.0.0.1:8080/twitter/home_timeline"))
               "Home timeline")
        ") "
-       "(" (a (@ (href "http://localhost:8080/twitter/user_timeline"))
+       "(" (a (@ (href "http://127.0.0.1:8080/twitter/user_timeline"))
               "User timeline")
        ") "
        ,(map
          (lambda (tweet)
-           (let ((user (hash-ref tweet "user")))
-             `(p (img (@ (src ,(hash-ref user "profile_image_url"))))
-                 ,(hash-ref tweet "text"))))
-         tweets)))))
+           (let ((user (assoc-ref tweet "user")))
+             `(p (img (@ (src ,(assoc-ref user "profile_image_url"))))
+                 ,(assoc-ref tweet "text"))))
+         (vector->list tweets))))))
 
 (define (twitter-timeline url)
   (twitter-timeline-html
@@ -196,7 +197,7 @@
    ;; Resource not found (404)
    (else (not-found request))))
 
-(display "\nNow go to http://localhost:8080/twitter\n")
+(display "\nNow go to http://127.0.0.1:8080/twitter\n")
 
 ;; We start the server. (main-handler) will be called every time a
 ;; request is received.
