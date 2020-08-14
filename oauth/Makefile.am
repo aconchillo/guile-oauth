@@ -1,7 +1,7 @@
 #
 # Makefile.am
 #
-# Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -19,10 +19,10 @@
 # along with guile-oauth. If not, see https://www.gnu.org/licenses/.
 #
 
-SUBDIRS = hashing industria oauth1
+SUBDIRS = oauth1
 
-moddir = $(datadir)/guile/site/@GUILE_EFFECTIVE_VERSION@/oauth
-objdir = $(libdir)/guile/@GUILE_EFFECTIVE_VERSION@/site-ccache/oauth
+moddir = $(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)/oauth
+objdir = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache/oauth
 
 SOURCES = oauth1.scm
 
@@ -36,4 +36,4 @@ CLEANFILES = $(GOBJECTS)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
 SUFFIXES = .scm .go
 .scm.go:
-	$(top_builddir)/env $(GUILE_TOOLS) compile $(GUILE_WARNINGS) -o "$@" "$<"
+	$(top_builddir)/env $(GUILD) compile $(GUILE_TARGET) $(GUILE_WARNINGS) -o "$@" "$<"

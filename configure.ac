@@ -1,7 +1,7 @@
 #
 # configure.ac
 #
-# Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -20,6 +20,7 @@
 #
 
 AC_INIT([guile-oauth], [0.4.0], [aconchillo@gmail.com])
+AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_SRCDIR(oauth/oauth1.scm)
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([color-tests -Wall -Wno-portability])
@@ -30,21 +31,49 @@ dnl Make sure they are available.
 m4_pattern_forbid([PKG_CHECK_MODULES])
 m4_pattern_forbid([^GUILE_PKG])
 
-dnl Check for Guile 2.x, and substitute 'GUILE_EFFECTIVE_VERSION'.
-GUILE_PKG([2.2])
+dnl Check for Guile >= 2.2
+GUILE_PKG([3.0 2.2])
 GUILE_PROGS
+GUILE_SITE_DIR
 
 GUILE_MODULE_REQUIRED([json])
+GUILE_MODULE_REQUIRED([gcrypt hmac])
 GUILE_MODULE_REQUIRED([gnutls])
+
+dnl Guile prefix and libdir.
+GUILE_PREFIX=`$PKG_CONFIG --print-errors --variable=prefix guile-$GUILE_EFFECTIVE_VERSION`
+GUILE_LIBDIR=`$PKG_CONFIG --print-errors --variable=libdir guile-$GUILE_EFFECTIVE_VERSION`
+AC_SUBST(GUILE_PREFIX)
+AC_SUBST(GUILE_LIBDIR)
+
+if test "$cross_compiling" != no; then
+   GUILE_TARGET="--target=$host_alias"
+   AC_SUBST([GUILE_TARGET])
+fi
 
 AC_CONFIG_FILES([Makefile
                  oauth/Makefile
-                 oauth/hashing/Makefile
-                 oauth/industria/Makefile
                  oauth/oauth1/Makefile
                  examples/Makefile])
 AC_CONFIG_FILES([env], [chmod +x env])
 
 AC_OUTPUT
+
+dnl This is just for printing $libdir below.
+LIBDIR=`eval echo $libdir`
+LIBDIR=`eval echo $LIBDIR`
+AC_SUBST([LIBDIR])
+
+echo
+echo "*** $PACKAGE $VERSION has been successfully configured ***"
+echo
+echo "$PACKAGE is using:"
+echo
+echo "    --prefix=$prefix --libdir=$LIBDIR"
+echo
+echo "If you want to install in Guile system's directory re-run with:"
+echo
+echo "    --prefix=$GUILE_PREFIX --libdir=$GUILE_LIBDIR"
+echo
 
 # configure.ac ends here

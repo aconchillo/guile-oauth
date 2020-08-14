@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 signature) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -28,8 +28,7 @@
   #:use-module (rnrs bytevectors)
   #:use-module (srfi srfi-9)
   #:use-module (web uri)
-  #:use-module (oauth hashing sha-1)
-  #:use-module (oauth industria base64)
+  #:use-module (gcrypt hmac)
   #:export (oauth1-signature
             oauth1-signature?
             oauth1-signature-method
@@ -54,15 +53,15 @@
 
 (define (hmac-sha1-signature base-string credentials token)
   (let ((key (hmac-sha1-key credentials token)))
-    (sha-1->bytevector
-     (hmac-sha-1 (string->utf8 key) (string->utf8 base-string)))))
+    (sign-data-base64 key base-string #:algorithm 'sha1)))
 
 (define oauth1-signature-hmac-sha1
   (oauth1-signature
    "HMAC-SHA1"
    (lambda (base-string credentials token)
-     (let ((s (hmac-sha1-signature base-string credentials token)))
-       (uri-encode (base64-encode s))))))
+     ;; We don't (uri-encode) since this will be done once the Authorization
+     ;; header is created.
+     (hmac-sha1-signature base-string credentials token))))
 
 ;;
 ;; PLAINTEXT
@@ -75,6 +74,8 @@
   (oauth1-signature
    "PLAINTEXT"
    (lambda (base-string credentials token)
-     (uri-encode (plaintext-signature credentials token)))))
+     ;; We don't (uri-encode) since this will be done once the Authorization
+     ;; header is created.
+     (plaintext-signature credentials token))))
 
 ;;; (oauth oauth1 signature) ends here
