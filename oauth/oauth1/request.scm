@@ -103,8 +103,8 @@ parameters."
 
 (define* (oauth1-request-http-url request #:key (param-filter
                                                  (compose not oauth1-param?)))
-  "Obtain the URI for the given @var{request}. The URI will contain all
-the @var{request} parameters that satisfy @var{param-filter} as URI
+  "Obtain the URL for the given @var{request}. The URI will contain all
+the @var{request} parameters that satisfy @var{param-filter} as URL
 query arguments."
   (let* ((url (oauth1-request-url request))
          (params (filter param-filter (oauth1-request-params request)))
@@ -178,6 +178,6 @@ object. Currently, only the GET and POST methods are supported."
     (case method
       ((GET) (http-get uri #:headers headers))
       ((POST) (http-post uri #:headers headers))
-      (else throw 'oauth-invalid-method))))
+      (else (throw 'oauth-invalid-method method)))))
 
 ;;; (oauth oauth1 request) ends here

@@ -1,4 +1,12 @@
 
+* Version 0.5.1 (Aug ??, 2020)
+
+  - oauth1-client-request-token now throws 'oauth-invalid-response with an
+    argument containing the response body.
+
+  - oauth1-credentials is now make-oauth1-credentials.
+
+
 * Version 0.5.0 (Aug 13, 2020)
 
   - Compile with Guile 3.

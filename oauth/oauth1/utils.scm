@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 utils) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -70,7 +70,7 @@ otherwise.  Useful when filtering parameter lists."
       (else #f))))))
 
 (define (oauth1-query-params params)
-  "Returns a URI query string for the given @var{params} association list."
+  "Returns a URL query string for the given @var{params} association list."
   (string-join
    (map (lambda (p) (string-append (uri-encode (symbol->string (car p)))
                                    "="

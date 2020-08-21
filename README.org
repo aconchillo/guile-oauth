@@ -4,8 +4,8 @@
 guile-oauth is a simple OAuth client module for Guile. It supports the
 following features:
 
-- OAuth 1.0a ([[http://tools.ietf.org/html/rfc5849][RFC 5849]]) protocol
-  support with HMAC-SHA1 and PLAINTEXT signatures.
+- [[https://oauth.net/core/1.0a/][OAuth 1.0a]] protocol support with HMAC-SHA1
+  and PLAINTEXT signatures.
 
 It depends on the following Guile version and modules:
 
@@ -54,17 +54,44 @@ guile-oauth, for example:
 These are the main procedures for guile-oauth which are implemented in
 terms of other guile-oauth procedures you will find in the API.
 
+- (*make-oauth1-credentials* id secret) : Creates new credentials. The same
+  credentials data structure is used for both a consumer key/consumer secret
+  pair or a token/token secret pair.
+
+- (*oauth1-parse-www-form-urlencoded* body) : Parses
+  application/x-www-form-urlencoded key/value pairs from the given response
+  body string.
+
+  **Returns** : an association list with key/value pairs.
+
 - (*oauth1-client-request-token* url credentials) : Obtain a request
   token from the server url for the given client credentials.
 
-- (*oauth1-client-authorize-url* url token) : Returns a complete
-  authorization URI given the server url and a request token.
+  **Returns** : request token credentials.
 
-- (*oauth1-client-access-token* url credentials token verifier) : Obtain
-  an access token from the server url for the given client credentials,
+  **Throws**
+
+  - *oauth-invalid-response* : if an unexpected response was returned from the
+    server.
+
+- (*oauth1-client-authorize-url* url request-token) : Returns a complete
+  authorization URL given the server url and a request token.
+
+  **Returns** : an authorization URL the client should connect to in order to
+  grant permissions and obtain a verification code.
+
+- (*oauth1-client-access-token* url credentials request-token verifier) :
+  Obtain an access token from the server url for the given client credentials,
   request token and verifier.
 
-- (*oauth1-client-request* url credentials token) : Access a server's
+  **Returns** : access token credentials.
+
+  **Throws**
+
+  - *oauth-invalid-response* : if an unexpected response was returned from the
+    server.
+
+- (*oauth1-client-request* url credentials access-token) : Access a server's
   protected resource url with the given client credentials and an access
   token.
 
@@ -85,7 +112,7 @@ under the /examples/ directory.
     : > (define authorize-url "https://api.twitter.com/oauth/authorize")
     : > (define access-url "https://api.twitter.com/oauth/access_token")
     : > (define home-timeline "https://api.twitter.com/1.1/statuses/home_timeline.json")
-    : > (define credentials (oauth1-credentials "key" "secret"))
+    : > (define credentials (make-oauth1-credentials "key" "secret"))
 
   The /key/ and /secret/ are provided by Twitter once you register a
   new application at https://dev.twitter.com.

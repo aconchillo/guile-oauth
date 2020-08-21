@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 client) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -44,11 +44,11 @@
                                       (signature oauth1-signature-hmac-sha1))
   "Obtain a request token from the server @var{url} for the given client
 @var{credentials} (key and secret). Takes one optional argument,
-@var{callback}, to set the callback URI that the server will redirect
+@var{callback}, to set the callback URL that the server will redirect
 after authorization is completed, it defaults to 'oob' (no redirection
 is performed). An HTTP method can be selected with @var{method} and
 additional parameters can be given in @var{params}."
-  (let ((token (oauth1-credentials "" ""))
+  (let ((token (make-oauth1-credentials "" ""))
         (request (oauth1-request url #:method method #:params params)))
     (oauth1-request-add-default-params request)
     (oauth1-request-add-param request 'oauth_callback callback)
@@ -63,9 +63,9 @@ additional parameters can be given in @var{params}."
 (define* (oauth1-client-authorize-url url
                                       #:optional (token #f)
                                       #:key (params '()))
-  "Returns a complete authorization URI given the server @var{url} and a
+  "Returns a complete authorization URL given the server @var{url} and a
 request @var{token}. A web application can automatically redirect to the
-returned URI otherwise ask the client to connect to it with a web
+returned URL otherwise ask the client to connect to it with a web
 browser."
   (let ((request (oauth1-request url #:method 'GET #:params params)))
     (when token
