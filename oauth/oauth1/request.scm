@@ -24,6 +24,8 @@
 ;;; Code:
 
 (define-module (oauth oauth1 request)
+  #:use-module (oauth oauth1 credentials)
+  #:use-module (oauth oauth1 response)
   #:use-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 utils)
   #:use-module (ice-9 format)
@@ -148,21 +150,24 @@ Signature Base String is a consistent reproducible concatenation of the
                 (oauth1-normalized-params params)))
      "&")))
 
-(define* (oauth1-request-sign request credentials token
+(define* (oauth1-request-sign request credentials response
                               #:key (signature oauth1-signature-hmac-sha1))
   "Adds the signature and signature method parameters to the given
 @var{request}. The signature will be computed using the client
-@var{credentials} and @var{token} and the given @var{signature} method."
+@var{credentials} and @var{response} token and the given @var{signature}
+method."
   ;; Before computing signature, we need to add signature method
   ;; parameter first.
   (oauth1-request-add-param request
                             'oauth_signature_method
                             (oauth1-signature-method signature))
   (let ((proc (oauth1-signature-proc signature))
-        (base-string (oauth1-request-signature-base-string request)))
+        (base-string (oauth1-request-signature-base-string request))
+        (client-secret (oauth1-credentials-secret credentials))
+        (token-secret (oauth1-response-token-secret response)))
     (oauth1-request-add-param request
                               'oauth_signature
-                              (proc base-string credentials token))))
+                              (proc base-string client-secret token-secret))))
 
 ;;
 ;; Request HTTP/HTTPS

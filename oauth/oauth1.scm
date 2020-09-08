@@ -1,6 +1,6 @@
 ;;; (oauth oauth1) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -27,6 +27,7 @@
   #:use-module (oauth oauth1 client)
   #:use-module (oauth oauth1 credentials)
   #:use-module (oauth oauth1 request)
+  #:use-module (oauth oauth1 response)
   #:use-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 utils))
 

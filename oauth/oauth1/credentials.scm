@@ -29,37 +29,13 @@
   #:use-module (srfi srfi-9)
   #:export (make-oauth1-credentials
             oauth1-credentials?
-            oauth1-credentials-id
-            oauth1-credentials-secret
-            oauth1-token-body->credentials))
+            oauth1-credentials-key
+            oauth1-credentials-secret))
 
 (define-record-type <oauth1-credentials>
-  (make-oauth1-credentials id secret)
+  (make-oauth1-credentials key secret)
   oauth1-credentials?
-  (id oauth1-credentials-id)
+  (key oauth1-credentials-key)
   (secret oauth1-credentials-secret))
-
-(define (oauth1-token-body->credentials body)
-  "Create a token credentials object with the token identifier and secret
-defined in the given HTTP response @var{body}. The token credentials are
-included using the 'application/x-www-form-urlencoded' content type and
-obtained with the 'oauth_token' and 'oauth_token_secret' parameters
-respectively. Note that this function will also check if the
-'oauth_callback_confirmed' parameter is present as required in OAuth1.0a, if
-not it will display a warning."
-  (let ((str-body (if (string? body) body (utf8->string body))))
-    (catch 'uri-error
-      (lambda ()
-        (let* ((params (oauth1-parse-www-form-urlencoded str-body))
-               (token (assoc-ref params "oauth_token"))
-               (secret (assoc-ref params "oauth_token_secret"))
-               (callback-confirmed (assoc-ref params "oauth_callback_confirmed")))
-          (unless (and token secret)
-            (throw 'oauth-invalid-response str-body))
-          (unless (and callback-confirmed (string=? callback-confirmed "true"))
-            (warn "Missing oauth_callback_confirmed=true in response as required in OAuth1.0a."))
-          (make-oauth1-credentials (assoc-ref params "oauth_token")
-                                   (assoc-ref params "oauth_token_secret"))))
-      (lambda _ (throw 'oauth-invalid-response str-body)))))
 
 ;;; (oauth oauth1 credentials) ends here

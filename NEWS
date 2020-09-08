@@ -1,10 +1,21 @@
 
-* Version 0.5.1 (Aug ??, 2020)
+* Version 1.0.0 (Aug ??, 2020)
+
+  OAuth1.0a:
 
   - oauth1-client-request-token now throws 'oauth-invalid-response with an
     argument containing the response body.
 
   - oauth1-credentials is now make-oauth1-credentials.
+
+  - oauth1-credentials-id is now oauth1-credentials-key.
+
+  - oauth1-client-request-token and oauth1-client-access-token now
+    return an oauth1-response record.
+
+  - oauth1-client-authorize-url, oauth1-client-access-token and
+    oauth1-client-request now receive a service response record instead of a
+    token record.
 
 
 * Version 0.5.0 (Aug 13, 2020)

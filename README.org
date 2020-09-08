@@ -54,9 +54,11 @@ guile-oauth, for example:
 These are the main procedures for guile-oauth which are implemented in
 terms of other guile-oauth procedures you will find in the API.
 
-- (*make-oauth1-credentials* id secret) : Creates new credentials. The same
-  credentials data structure is used for both a consumer key/consumer secret
-  pair or a token/token secret pair.
+- (*make-oauth1-credentials* key secret) : Creates new client credentials.
+
+- (*oauth1-credentials-key* credentials) : Returns the client key.
+
+- (*oauth1-credentials-secret* credentials) : Returns the client secret.
 
 - (*oauth1-parse-www-form-urlencoded* body) : Parses
   application/x-www-form-urlencoded key/value pairs from the given response
@@ -67,7 +69,7 @@ terms of other guile-oauth procedures you will find in the API.
 - (*oauth1-client-request-token* url credentials) : Obtain a request
   token from the server url for the given client credentials.
 
-  **Returns** : request token credentials.
+  **Returns** : a service response.
 
   **Throws**
 
@@ -84,7 +86,7 @@ terms of other guile-oauth procedures you will find in the API.
   Obtain an access token from the server url for the given client credentials,
   request token and verifier.
 
-  **Returns** : access token credentials.
+  **Returns** : a service response.
 
   **Throws**
 
@@ -94,6 +96,15 @@ terms of other guile-oauth procedures you will find in the API.
 - (*oauth1-client-request* url credentials access-token) : Access a server's
   protected resource url with the given client credentials and an access
   token.
+
+- (*oauth1-response-token* response) : Returns the token from a service
+  provider response.
+
+- (*oauth1-response-token-secret* response) : Returns the token secret from a
+  service provider response.
+
+- (*oauth1-response-params* response) : Returns additional parameters returns
+  by the service provider.
 
 
 ** Example: Twitter client
