@@ -42,6 +42,7 @@
 (re-export-modules (oauth oauth1 client)
                    (oauth oauth1 credentials)
                    (oauth oauth1 request)
+                   (oauth oauth1 response)
                    (oauth oauth1 signature)
                    (oauth oauth1 utils))
 
