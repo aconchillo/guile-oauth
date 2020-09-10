@@ -10,7 +10,7 @@ following features:
 It depends on the following Guile version and modules:
 
 - [Guile](https://www.gnu.org/software/guile/) >= 2.2.0.
-- [GnuTLS](https://www.gnutls.org/] Guile bindings (for HTTPS support).
+- [GnuTLS](https://www.gnutls.org/) Guile bindings (for HTTPS support).
 - [guile-gcrypt](https://notabug.org/cwebber/guile-gcrypt/) >= 0.3.0.
 - [guile-json](https://github.com/aconchillo/guile-json/) >= 3.0.0 (only to run Twitter example).
 
@@ -84,8 +84,8 @@ guile-oauth, for example:
 
 ### Helpers
 
-- (**oauth1-parse-www-form-urlencoded** string #:optional charset) : Parses
-  the given string of name/value pairs as defined by the content type
+- (**oauth1-parse-www-form-urlencoded** str #:optional charset) : Parses the
+  given *str* string of name/value pairs as defined by the content type
   application/x-www-form-urlencoded and returns and association list. The keys
   and values in the association list are strings.
 
@@ -117,40 +117,52 @@ timeline. The complete example is available as a web application under the
 
 - Load the OAuth module:
 
-    > (use-modules (oauth oauth1))
+```
+> (use-modules (oauth oauth1))
+```
 
 - Define our Twitter URLs and application credentials:
 
-    > (define request-url "https://api.twitter.com/oauth/request_token")
-    > (define authorize-url "https://api.twitter.com/oauth/authorize")
-    > (define access-url "https://api.twitter.com/oauth/access_token")
-    > (define home-timeline "https://api.twitter.com/1.1/statuses/home_timeline.json")
-    > (define credentials (make-oauth1-credentials "key" "secret"))
+```
+> (define request-url "https://api.twitter.com/oauth/request_token")
+> (define authorize-url "https://api.twitter.com/oauth/authorize")
+> (define access-url "https://api.twitter.com/oauth/access_token")
+> (define home-timeline "https://api.twitter.com/1.1/statuses/home_timeline.json")
+> (define credentials (make-oauth1-credentials "key" "secret"))
+```
 
   The *key* and *secret* are provided by Twitter once you register a new
   application at https://dev.twitter.com.
 
 - Obtain a request token:
 
-    > (define request-token (oauth1-client-request-token request-url credentials))
+```
+> (define request-token (oauth1-client-request-token request-url credentials))
+```
 
 - Connect to the following returned URL for authorizing the request token:
 
-    > (oauth1-client-authorize-url authorize-url request-token)
+```
+> (oauth1-client-authorize-url authorize-url request-token)
+```
 
   Here you will need to login to Twitter or simply authorize your
   application if you are already logged in.
 
 - Obtain the access token that will allow us to access protected resources:
 
-    > (define access-token
-        (oauth1-client-access-token access-url credentials request-token "verifier"))
+```
+> (define access-token
+    (oauth1-client-access-token access-url credentials request-token "verifier"))
+```
 
   The *verifier* is the string given by Twitter in the previous step.
 
 - Get your tweets:
 
-    > (oauth1-client-request home-timeline credentials access-token)
+```
+> (oauth1-client-request home-timeline credentials access-token)
+```
 
 # License
 
