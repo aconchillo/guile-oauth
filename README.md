@@ -132,7 +132,7 @@ timeline. The complete example is available as a web application under the
 ```
 
   The *key* and *secret* are provided by Twitter once you register a new
-  application at https://dev.twitter.com.
+  application at https://developer.twitter.com.
 
 - Obtain a request token:
 
