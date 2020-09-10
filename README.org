@@ -51,21 +51,6 @@ guile-oauth, for example:
 
 ** Procedures
 
-These are the main procedures for guile-oauth which are implemented in
-terms of other guile-oauth procedures you will find in the API.
-
-- (*make-oauth1-credentials* key secret) : Creates new client credentials.
-
-- (*oauth1-credentials-key* credentials) : Returns the client key.
-
-- (*oauth1-credentials-secret* credentials) : Returns the client secret.
-
-- (*oauth1-parse-www-form-urlencoded* body) : Parses
-  application/x-www-form-urlencoded key/value pairs from the given response
-  body string.
-
-  **Returns** : an association list with key/value pairs.
-
 - (*oauth1-client-request-token* url credentials) : Obtain a request
   token from the server url for the given client credentials.
 
@@ -96,6 +81,23 @@ terms of other guile-oauth procedures you will find in the API.
 - (*oauth1-client-request* url credentials access-token) : Access a server's
   protected resource url with the given client credentials and an access
   token.
+
+*** Helpers
+
+- (*oauth1-parse-www-form-urlencoded* string #:optional charset) : Parses the
+  given string of name/value pairs as defined by the content type
+  application/x-www-form-urlencoded and returns and association list. The keys
+  and values in the association list are strings.
+
+- (*make-oauth1-credentials* key secret) : Creates new client credentials.
+
+- (*oauth1-credentials-key* credentials) : Returns the client key.
+
+- (*oauth1-credentials-secret* credentials) : Returns the client secret.
+
+- (*make-oauth1-response* token token-secret params) : Creates a new service
+  provider response for the given token, token secret and additional service
+  parameters.
 
 - (*oauth1-response-token* response) : Returns the token from a service
   provider response.
