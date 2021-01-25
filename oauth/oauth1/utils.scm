@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 utils) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -31,10 +31,8 @@
   #:export (oauth1-timestamp
             oauth1-nonce
             oauth1-param?
-            oauth1-query-params
             oauth1-normalized-params
-            oauth1-authorization-header-params
-            oauth1-parse-www-form-urlencoded))
+            oauth1-authorization-header-params))
 
 (define (oauth1-timestamp)
   "Return the number of seconds since the epoch, 00:00:00 UTC on 1
@@ -69,15 +67,6 @@ otherwise.  Useful when filtering parameter lists."
       ((string= k1 k2) (string< v1 v2))
       (else #f))))))
 
-(define (oauth1-query-params params)
-  "Returns a URL query string for the given @var{params} association list."
-  (string-join
-   (map (lambda (p) (string-append (uri-encode (symbol->string (car p)))
-                                   "="
-                                   (uri-encode (cdr p))))
-        params)
-   "&"))
-
 (define (oauth1-normalized-params params)
   "Returns a normalized single string for the given @var{params}
 association list, according to the Normalize Request Parameters section
@@ -97,19 +86,5 @@ RFC 5849."
                                    (uri-encode (cdr p)) "\""))
         params)
    ", "))
-
-(define* (oauth1-parse-www-form-urlencoded str #:optional (charset "utf-8"))
-  "Parse the string @var{str} of name/value pairs as defined by the
-content type application/x-www-form-urlencoded and return and
-association list. The keys and values in the association list are
-strings."
-  (map
-   (lambda (piece)
-     (let ((equals (string-index piece #\=)))
-       (if equals
-           (cons (uri-decode (substring piece 0 equals) #:encoding charset)
-                 (uri-decode (substring piece (1+ equals)) #:encoding charset))
-           (cons (uri-decode piece #:encoding charset) ""))))
-   (string-split str #\&)))
 
 ;;; (oauth oauth1 utils) ends here

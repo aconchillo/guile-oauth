@@ -29,6 +29,7 @@
   #:use-module (oauth oauth1 request)
   #:use-module (oauth oauth1 response)
   #:use-module (oauth oauth1 utils)
+  #:use-module (oauth request)
   #:use-module (ice-9 receive)
   #:use-module (rnrs bytevectors)
   #:use-module (web uri)
@@ -50,12 +51,12 @@ after authorization is completed, it defaults to 'oob' (no redirection
 is performed). An HTTP method can be selected with @var{method} and
 additional parameters can be given in @var{params}."
   (let ((response (make-oauth1-response "" "" '()))
-        (request (oauth1-request url #:method method #:params params)))
+        (request (make-oauth-request url method params)))
     (oauth1-request-add-default-params request)
-    (oauth1-request-add-param request 'oauth_callback callback)
-    (oauth1-request-add-param request
-                              'oauth_consumer_key
-                              (oauth1-credentials-key credentials))
+    (oauth-request-add-param request 'oauth_callback callback)
+    (oauth-request-add-param request
+                             'oauth_consumer_key
+                             (oauth1-credentials-key credentials))
     (oauth1-request-sign request credentials response #:signature signature)
     (receive (response body)
         (oauth1-http-request request)
@@ -66,14 +67,14 @@ additional parameters can be given in @var{params}."
                                       #:key (params '()))
   "Returns a complete authorization URL given the server @var{url} and a
 request token @var{response}. A web application can automatically redirect to
-the returned URL otherwise ask the client to connect to it with a web
+the returned URL otherwise ask the user to connect to it with a web
 browser."
-  (let ((request (oauth1-request url #:method 'GET #:params params)))
+  (let ((request (make-oauth-request url 'GET params)))
     (when response
-      (oauth1-request-add-param request
-                                'oauth_token
-                                (oauth1-response-token response)))
-    (oauth1-request-http-url request #:param-filter (lambda (_) #t))))
+      (oauth-request-add-param request
+                               'oauth_token
+                               (oauth1-response-token response)))
+    (oauth-request-http-url request)))
 
 (define* (oauth1-client-access-token url credentials response verifier
                                      #:key
@@ -83,15 +84,15 @@ browser."
 @var{credentials} (key and secret), request token @var{response} and
 @var{verifier}. Access tokens are used to connect to protected resources. An
 HTTP method can be selected with @var{method}."
-  (let ((request (oauth1-request url #:method method)))
+  (let ((request (make-oauth-request url method '())))
     (oauth1-request-add-default-params request)
-    (oauth1-request-add-param request
-                              'oauth_token
-                              (oauth1-response-token response))
-    (oauth1-request-add-param request 'oauth_verifier verifier)
-    (oauth1-request-add-param request
-                              'oauth_consumer_key
-                              (oauth1-credentials-key credentials))
+    (oauth-request-add-param request
+                             'oauth_token
+                             (oauth1-response-token response))
+    (oauth-request-add-param request 'oauth_verifier verifier)
+    (oauth-request-add-param request
+                             'oauth_consumer_key
+                             (oauth1-credentials-key credentials))
     (oauth1-request-sign request credentials response #:signature signature)
     (receive (response body)
         (oauth1-http-request request)
@@ -106,14 +107,14 @@ HTTP method can be selected with @var{method}."
 @var{credentials} (key and secret) and an access token @var{response}. Returns
 a string. An HTTP method can be selected with @var{method} and additional
 parameters can be given in @var{params}."
-  (let ((request (oauth1-request url #:method method #:params params)))
+  (let ((request (make-oauth-request url method params)))
     (oauth1-request-add-default-params request)
-    (oauth1-request-add-param request
-                              'oauth_token
-                              (oauth1-response-token response))
-    (oauth1-request-add-param request
-                              'oauth_consumer_key
-                              (oauth1-credentials-key credentials))
+    (oauth-request-add-param request
+                             'oauth_token
+                             (oauth1-response-token response))
+    (oauth-request-add-param request
+                             'oauth_consumer_key
+                             (oauth1-credentials-key credentials))
     (oauth1-request-sign request credentials response #:signature signature)
     (receive (response body)
         (oauth1-http-request request)

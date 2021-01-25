@@ -1,7 +1,7 @@
 #
 # configure.ac
 #
-# Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2013-2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -53,6 +53,7 @@ fi
 AC_CONFIG_FILES([Makefile
                  oauth/Makefile
                  oauth/oauth1/Makefile
+                 oauth/oauth2/Makefile
                  examples/Makefile])
 AC_CONFIG_FILES([env], [chmod +x env])
 

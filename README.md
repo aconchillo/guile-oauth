@@ -84,7 +84,7 @@ guile-oauth, for example:
 
 ### Helpers
 
-- (**oauth1-parse-www-form-urlencoded** str #:optional charset) : Parses the
+- (**oauth-parse-www-form-urlencoded** str #:optional charset) : Parses the
   given *str* string of name/value pairs as defined by the content type
   application/x-www-form-urlencoded and returns and association list. The keys
   and values in the association list are strings.

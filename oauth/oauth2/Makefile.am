@@ -1,7 +1,7 @@
 #
 # Makefile.am
 #
-# Copyright (C) 2013-2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -19,12 +19,12 @@
 # along with guile-oauth. If not, see https://www.gnu.org/licenses/.
 #
 
-SUBDIRS = oauth1
+moddir = $(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)/oauth/oauth2
+objdir = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache/oauth/oauth2
 
-moddir = $(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)/oauth
-objdir = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache/oauth
-
-SOURCES = oauth1.scm oauth2.scm request.scm utils.scm
+SOURCES = \
+  client.scm \
+  #
 
 GOBJECTS = $(SOURCES:%.scm=%.go)
 

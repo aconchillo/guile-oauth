@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 response) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2020, 2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -24,7 +24,7 @@
 ;;; Code:
 
 (define-module (oauth oauth1 response)
-  #:use-module (oauth oauth1 utils)
+  #:use-module (oauth utils)
   #:use-module (rnrs bytevectors)
   #:use-module (srfi srfi-9)
   #:export (make-oauth1-response
@@ -48,19 +48,19 @@ might include additional parameters defined by the service provider. The token
 and the token secret are included as 'application/x-www-form-urlencoded'
 content and obtained with the 'oauth_token' and 'oauth_token_secret'
 parameters respectively. Note that this function will also check if the
-'oauth_callback_confirmed' parameter is present as required in OAuth1.0a, if
+'oauth_callback_confirmed' parameter is present as required by OAuth1.0a, if
 not it will display a warning."
   (let ((str-body (if (string? body) body (utf8->string body))))
     (catch 'uri-error
       (lambda ()
-        (let* ((params (oauth1-parse-www-form-urlencoded str-body))
+        (let* ((params (oauth-parse-www-form-urlencoded str-body))
                (token (assoc-ref params "oauth_token"))
                (secret (assoc-ref params "oauth_token_secret"))
                (callback-confirmed (assoc-ref params "oauth_callback_confirmed")))
           (unless (and token secret)
             (throw 'oauth-invalid-response str-body))
           (unless (and callback-confirmed (string=? callback-confirmed "true"))
-            (warn "Missing oauth_callback_confirmed=true in response as required in OAuth1.0a."))
+            (warn "Missing oauth_callback_confirmed=true in response as required by OAuth1.0a."))
           ;; Only leave optional parameters in params alist.
           (set! params (assoc-remove! params "oauth_token"))
           (set! params (assoc-remove! params "oauth_token_secret"))

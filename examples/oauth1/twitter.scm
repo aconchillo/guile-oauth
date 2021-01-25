@@ -3,7 +3,7 @@
 
 ;;; Guile OAuth client example.
 
-;; Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -28,6 +28,7 @@
 
 (use-modules (json)
              (oauth oauth1)
+             (oauth utils)
              (ice-9 receive)
              (sxml simple)
              (srfi srfi-43)
@@ -107,7 +108,7 @@
     (oauth1-client-authorize-url *twitter-auth-url* *request-token*)))
 
 (define (twitter-auth request body)
-  (let ((params (oauth1-parse-www-form-urlencoded (utf8->string body))))
+  (let ((params (oauth-parse-www-form-urlencoded (utf8->string body))))
     (set! *twitter-credentials*
       (make-oauth1-credentials (assoc-ref params "key")
                                (assoc-ref params "secret")))
@@ -126,7 +127,7 @@
 (define (twitter-access-handler request body)
   (let* ((location "http://127.0.0.1:8080/twitter/home_timeline")
          (query (uri-query (request-uri request)))
-         (params (oauth1-parse-www-form-urlencoded query))
+         (params (oauth-parse-www-form-urlencoded query))
          (verifier (assoc-ref params "oauth_verifier")))
     (set! *access-token*
       (oauth1-client-access-token *twitter-access-url*
