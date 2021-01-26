@@ -49,7 +49,7 @@ guile-oauth, for example:
 
 # Usage
 
-## Procedures
+## OAuth 1.0a
 
 - (**oauth1-client-request-token** url credentials) : Obtain a request token
   from the server url for the given client credentials.
@@ -61,7 +61,7 @@ guile-oauth, for example:
   - *oauth-invalid-response* : if an unexpected response was returned from the
     server.
 
-- (**oauth1-client-authorize-url** url request-token) : Returns a complete
+- (**oauth1-client-authorization-url** url request-token) : Returns a complete
   authorization URL given the server url and a request token.
 
   **Returns** : an authorization URL the client should connect to in order to
@@ -82,7 +82,7 @@ guile-oauth, for example:
   protected resource url with the given client credentials and an access
   token.
 
-### Helpers
+## Helpers
 
 - (**oauth-parse-www-form-urlencoded** str #:optional charset) : Parses the
   given *str* string of name/value pairs as defined by the content type

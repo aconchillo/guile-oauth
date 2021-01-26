@@ -1,4 +1,4 @@
-;;; (oauth oauth2) --- Guile OAuth 2.0 implementation.
+;;; (oauth oauth2 request) --- Guile OAuth 1.0 implementation.
 
 ;; Copyright (C) 2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
@@ -19,21 +19,26 @@
 
 ;;; Commentary:
 
-;; OAuth 2.0  module for Guile
+;; OAuth 2.0 module for Guile
 
 ;;; Code:
 
-(define-module (oauth oauth2)
-  #:use-module (oauth oauth2 client))
+(define-module (oauth oauth2 request)
+  #:use-module (oauth request)
+  #:use-module (web client)
+  #:use-module (web uri)
+  #:export (oauth2-http-request))
 
-(define-syntax re-export-modules
-  (syntax-rules ()
-    ((_ (mod ...) ...)
-     (begin
-       (module-use! (module-public-interface (current-module))
-                    (resolve-interface '(mod ...)))
-       ...))))
+;;
+;; Request HTTP/HTTPS
+;;
 
-(re-export-modules (oauth oauth2 client))
+(define* (oauth2-http-request request #:key (headers '()))
+  "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and parameters are
+already defined in the given @var{request} object."
+  (let* ((request-url (oauth-request-http-url request)))
+    (http-request (string->uri request-url)
+                  #:method (oauth-request-method request)
+                  #:headers headers)))
 
-;;; (oauth oauth2) ends here
+;;; (oauth oauth2 request) ends here

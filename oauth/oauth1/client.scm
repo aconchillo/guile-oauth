@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 client) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -34,7 +34,7 @@
   #:use-module (rnrs bytevectors)
   #:use-module (web uri)
   #:export (oauth1-client-request-token
-            oauth1-client-authorize-url
+            oauth1-client-authorization-url
             oauth1-client-access-token
             oauth1-client-request))
 
@@ -62,9 +62,9 @@ additional parameters can be given in @var{params}."
         (oauth1-http-request request)
       (oauth1-http-body->response body))))
 
-(define* (oauth1-client-authorize-url url
-                                      #:optional (response #f)
-                                      #:key (params '()))
+(define* (oauth1-client-authorization-url url
+                                          #:optional (response #f)
+                                          #:key (params '()))
   "Returns a complete authorization URL given the server @var{url} and a
 request token @var{response}. A web application can automatically redirect to
 the returned URL otherwise ask the user to connect to it with a web

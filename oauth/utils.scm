@@ -24,10 +24,18 @@
 ;;; Code:
 
 (define-module (oauth utils)
+  #:use-module (srfi srfi-1)
   #:use-module (web uri)
-  #:export (oauth-query-params
+  #:export (oauth-generate-token
+            oauth-query-params
             oauth-parse-www-form-urlencoded))
 
+(define ASCII_ALPHABET "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+(define* (oauth-generate-token #:optional (length 30))
+  (define (random-char _)
+    (string-ref ASCII_ALPHABET (random (string-length ASCII_ALPHABET))))
+  (list->string (list-tabulate length random-char)))
 
 (define (oauth-query-params params)
   "Returns a URL query string for the given @var{params} association list."

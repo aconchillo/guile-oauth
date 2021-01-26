@@ -24,23 +24,49 @@
 ;;; Code:
 
 (define-module (oauth oauth2 client)
+  #:use-module (oauth oauth2 request)
   #:use-module (oauth request)
-  #:export (oauth2-client-authorize-url))
+  #:use-module (oauth utils)
+  #:use-module (ice-9 receive)
+  #:use-module (rnrs bytevectors)
+  #:use-module (web client)
+  #:export (oauth2-client-authorization-url
+            oauth2-client-access-token))
 
-(define* (oauth2-client-authorize-url url client-id
-                                      #:optional
-                                      (redirect-uri #f) (scope #f))
-  "Returns a complete authorization URL given the server @var{url} and the
-client id @var{client-id}. A web application can automatically redirect to the
-returned URL otherwise ask the user to connect to it with a web browser."
+(define* (oauth2-client-authorization-url url client-id
+                                          #:key (redirect-uri #f) (scopes #f))
+  "Returns a couple of values: the complete authorization URL and the internally
+auto-generated state. The complete authorization URL is built from the given
+@var{url}, @var{client-id}, @var{redirect-uri}, a list of @var{scopes} and the
+state. A web application can then automatically redirect to the returned URL
+otherwise ask the user to connect to it with a web browser."
   (let ((request (make-oauth-request url 'GET '())))
     (oauth-request-add-params request
-                              '((response_type . "code")
-                                (client_id . client-id)))
+                              `((response_type . "code")
+                                (client_id . ,client-id)))
     (when redirect-uri
       (oauth-request-add-param request 'redirect_uri redirect-uri))
-    (when scope
-      (oauth-request-add-param request 'scope scope))
-    (oauth-request-http-url request)))
+    (when scopes
+      (oauth-request-add-param request 'scope (string-join scopes " ")))
+    (let ((state (oauth-generate-token)))
+      (oauth-request-add-param request 'state state)
+      (values (oauth-request-http-url request) state))))
+
+(define* (oauth2-client-access-token url client-id code
+                                     #:key (redirect-uri #f) (method 'POST) (headers '()))
+  "Obtain an access token from the server @var{url} for the given
+@var{client-id} and @var{code}. The @var{code} is the value obtained after
+connecting to the authorization url. Access tokens are used to connect to
+protected resources. An HTTP method can be selected with @var{method}."
+  (let ((request (make-oauth-request url method '())))
+    (oauth-request-add-params request
+                              `((grant_type . "authorization_code")
+                                (client_id . ,client-id)
+                                (code . ,code)))
+    (when redirect-uri
+      (oauth-request-add-param request 'redirect_uri redirect-uri))
+    (receive (response body)
+        (oauth2-http-request request #:headers headers)
+      (pk (utf8->string body)))))
 
 ;;; (oauth oauth2 client) ends here
