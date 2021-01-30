@@ -30,6 +30,7 @@
   #:use-module (ice-9 receive)
   #:use-module (rnrs bytevectors)
   #:use-module (web client)
+  #:use-module (json)
   #:export (oauth2-client-authorization-url
             oauth2-client-access-token))
 
@@ -52,8 +53,10 @@ otherwise ask the user to connect to it with a web browser."
       (oauth-request-add-param request 'state state)
       (values (oauth-request-http-url request) state))))
 
-(define* (oauth2-client-access-token url client-id code
-                                     #:key (redirect-uri #f) (method 'POST) (headers '()))
+(define* (oauth2-client-access-token url code
+                                     #:key
+                                     (client-id #f) (redirect-uri #f)
+                                     (method 'POST) (auth '()) (extra-headers '()))
   "Obtain an access token from the server @var{url} for the given
 @var{client-id} and @var{code}. The @var{code} is the value obtained after
 connecting to the authorization url. Access tokens are used to connect to
@@ -61,12 +64,15 @@ protected resources. An HTTP method can be selected with @var{method}."
   (let ((request (make-oauth-request url method '())))
     (oauth-request-add-params request
                               `((grant_type . "authorization_code")
-                                (client_id . ,client-id)
                                 (code . ,code)))
+    (when client-id
+      (oauth-request-add-param request 'client_id client-id))
     (when redirect-uri
       (oauth-request-add-param request 'redirect_uri redirect-uri))
     (receive (response body)
-        (oauth2-http-request request #:headers headers)
-      (pk (utf8->string body)))))
+        (oauth2-http-request request
+                             #:headers (append `((authorization . ,auth))
+                                               extra-headers))
+      (json-string->scm (utf8->string body)))))
 
 ;;; (oauth oauth2 client) ends here
