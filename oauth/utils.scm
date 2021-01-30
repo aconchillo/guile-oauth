@@ -25,12 +25,21 @@
 
 (define-module (oauth utils)
   #:use-module (srfi srfi-1)
+  #:use-module (rnrs bytevectors)
+  #:use-module (web http)
   #:use-module (web uri)
-  #:export (oauth-generate-token
+  #:use-module (gcrypt base64)
+  #:export (oauth-http-basic-auth
+            oauth-generate-token
             oauth-query-params
             oauth-parse-www-form-urlencoded))
 
 (define ASCII_ALPHABET "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+(define (oauth-http-basic-auth username password)
+  (let ((value (string-append username ":" password)))
+    (parse-header 'authorization
+                (string-append "Basic " (base64-encode (string->utf8 value))))))
 
 (define* (oauth-generate-token #:optional (length 30))
   (define (random-char _)
