@@ -67,18 +67,6 @@
                            (label (@ (for "secret")) "Client secret: ")
                            (input (@ (name "secret") (type "text") (size "50")
                                      (value ""))))
-                      (div (@ (class "field"))
-                           (label (@ (for "request")) "Request token URL: ")
-                           (input (@ (name "request") (type "text") (size "50")
-                                     (value ,*twitter-request-url*))))
-                      (div (@ (class "field"))
-                           (label (@ (for "auth")) "Authorize token URL: ")
-                           (input (@ (name "auth") (type "text") (size "50")
-                                     (value ,*twitter-auth-url*))))
-                      (div (@ (class "field"))
-                           (label (@ (for "access")) "Access token URL: ")
-                           (input (@ (name "access") (type "text") (size "50")
-                                     (value ,*twitter-access-url*))))
                       (button (@ (class "ui button") (type "submit")) "Home timeline")))))
 
 (define (twitter-main-form request body)
@@ -105,16 +93,13 @@
       (oauth1-client-request-token *twitter-request-url*
                                    *twitter-credentials*
                                    callback))
-    (oauth1-client-authorize-url *twitter-auth-url* *request-token*)))
+    (oauth1-client-authorization-url *twitter-auth-url* *request-token*)))
 
 (define (twitter-auth request body)
   (let ((params (oauth-parse-www-form-urlencoded (utf8->string body))))
     (set! *twitter-credentials*
       (make-oauth1-credentials (assoc-ref params "key")
                                (assoc-ref params "secret")))
-    (set! *twitter-request-url* (assoc-ref params "request"))
-    (set! *twitter-auth-url* (assoc-ref params "auth"))
-    (set! *twitter-access-url* (assoc-ref params "access"))
     (twitter-authenticate)))
 
 (define (twitter-auth-handler request body)
