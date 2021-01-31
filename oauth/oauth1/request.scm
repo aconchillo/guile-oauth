@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 request) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -116,12 +116,13 @@ method."
 ;; Request HTTP/HTTPS
 ;;
 
-(define* (oauth1-http-request request)
+(define* (oauth1-http-request request #:key (extra-headers '()))
   "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and parameters are
 already defined in the given @var{request} object."
   (let* ((request-url (oauth-request-http-url request #:param-filter (compose not oauth1-param?))))
     (http-request (string->uri request-url)
                   #:method (oauth-request-method request)
-                  #:headers (oauth1-request-http-headers request))))
+                  #:headers (append (oauth1-request-http-headers request)
+                                    extra-headers))))
 
 ;;; (oauth oauth1 request) ends here
