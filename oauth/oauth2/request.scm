@@ -26,8 +26,20 @@
 (define-module (oauth oauth2 request)
   #:use-module (oauth request)
   #:use-module (web client)
+  #:use-module (web http)
   #:use-module (web uri)
-  #:export (oauth2-http-request))
+  #:export (oauth2-http-auth-from-token
+            oauth2-http-request))
+
+(define (oauth2-http-auth-from-token token)
+  "Create HTTP authorization credentials depending on the specified @var{token}
+type (e.g. bearer or mac)."
+  (let ((token-type (assoc-ref token "token_type"))
+        (access-token (assoc-ref token "access_token")))
+    (cond
+     ((string=? token-type "bearer")
+      (parse-header 'authorization
+                    (string-append "bearer " access-token))))))
 
 ;;
 ;; Request HTTP/HTTPS

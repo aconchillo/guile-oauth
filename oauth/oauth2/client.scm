@@ -32,7 +32,8 @@
   #:use-module (web client)
   #:use-module (json)
   #:export (oauth2-client-authorization-url
-            oauth2-client-access-token))
+            oauth2-client-access-token
+            oauth2-client-http-request))
 
 (define* (oauth2-client-authorization-url url client-id
                                           #:key (redirect-uri #f) (scopes #f))
@@ -58,8 +59,10 @@ otherwise ask the user to connect to it with a web browser."
                                      (client-id #f) (redirect-uri #f)
                                      (method 'POST) (auth '()) (extra-headers '()))
   "Obtain an access token from the server @var{url} for the given
-@var{client-id} and @var{code}. The @var{code} is the value obtained after
-connecting to the authorization url. Access tokens are used to connect to
+@var{code}. The @var{code} is the value obtained after connecting to the
+authorization url. Optional @var{client-id}, @var{redirect-uri}, authorization
+header @var{auth} (e.g. @var{oauth-http-basic-auth}) and a list of
+@var{extra-headers} can be provided. Access tokens are used to connect to
 protected resources. An HTTP method can be selected with @var{method}."
   (let ((request (make-oauth-request url method '())))
     (oauth-request-add-params request
@@ -74,5 +77,21 @@ protected resources. An HTTP method can be selected with @var{method}."
                              #:headers (append `((authorization . ,auth))
                                                extra-headers))
       (json-string->scm (utf8->string body)))))
+
+(define* (oauth2-client-http-request url token
+                                     #:key
+                                     (method 'GET) (params '()) (extra-headers '()))
+  "Access a server's protected resource @var{url} with the given access
+@var{token} response previsouly obtained. Returns a string. An HTTP method can
+be selected with @var{method}, additional parameters can be given in
+@var{params} as an alist and a list of @var{extra-headers} can also be
+specified."
+  (let ((request (make-oauth-request url method params))
+        (auth (oauth2-http-auth-from-token token)))
+    (receive (response body)
+        (oauth2-http-request request
+                             #:headers (append `((authorization . ,auth))
+                                               extra-headers))
+      (if (string? body) body (utf8->string body)))))
 
 ;;; (oauth oauth2 client) ends here

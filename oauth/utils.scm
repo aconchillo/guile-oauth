@@ -37,23 +37,10 @@
 (define ASCII_ALPHABET "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 (define (oauth-http-basic-auth username password)
+  "Create HTTP basic authorization credentials."
   (let ((value (string-append username ":" password)))
     (parse-header 'authorization
                 (string-append "Basic " (base64-encode (string->utf8 value))))))
-
-(define* (oauth-generate-token #:optional (length 30))
-  (define (random-char _)
-    (string-ref ASCII_ALPHABET (random (string-length ASCII_ALPHABET))))
-  (list->string (list-tabulate length random-char)))
-
-(define (oauth-query-params params)
-  "Returns a URL query string for the given @var{params} association list."
-  (string-join
-   (map (lambda (p) (string-append (uri-encode (symbol->string (car p)))
-                                   "="
-                                   (uri-encode (cdr p))))
-        params)
-   "&"))
 
 (define* (oauth-parse-www-form-urlencoded str #:optional (charset "utf-8"))
   "Parse the string @var{str} of name/value pairs as defined by the
@@ -68,5 +55,21 @@ strings."
                  (uri-decode (substring piece (1+ equals)) #:encoding charset))
            (cons (uri-decode piece #:encoding charset) ""))))
    (string-split str #\&)))
+
+(define* (oauth-generate-token #:optional (length 30))
+  "Generate a random ASCII token of the given @var{length}."
+  (define (random-char _)
+    (string-ref ASCII_ALPHABET (random (string-length ASCII_ALPHABET))))
+  (list->string (list-tabulate length random-char)))
+
+(define (oauth-query-params params)
+  "Returns a URL query (key1=value1&key2=value2...) string for the given
+@var{params} association list. Both keys and values will be encoded."
+  (string-join
+   (map (lambda (p) (string-append (uri-encode (symbol->string (car p)))
+                                   "="
+                                   (uri-encode (cdr p))))
+        params)
+   "&"))
 
 ;;; (oauth utils) ends here
