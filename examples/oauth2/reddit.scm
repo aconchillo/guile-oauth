@@ -56,43 +56,14 @@
 (define *access-token* '())
 (define *redirect-uri* "http://127.0.0.1:8080/reddit/access")
 
-;; Subreddit feed
-(define-json-type <subreddit>
+(define-json-type <post>
   (title)
   (author)
-  (ups))
-
-(define-json-type <subreddit-listing-children>
-  (kind)
-  (subreddit "data" <subreddit>))
-
-(define-json-type <subreddit-listing-data>
-  (modhash)
-  (dist)
-  (children "children" #(<subreddit-listing-children>)))
-
-(define-json-type <subreddit-listing>
-  (kind)
-  (data "data" <subreddit-listing-data>))
-
-
-;; Subreddit info
-(define-json-type <subreddit-info>
-  (display-name "display_name")
   (url))
 
-(define-json-type <subreddit-info-listing-children>
-  (kind)
-  (subreddit "data" <subreddit-info>))
-
-(define-json-type <subreddit-info-listing-data>
-  (modhash)
-  (dist)
-  (children "children" #(<subreddit-info-listing-children>)))
-
-(define-json-type <subreddit-info-listing>
-  (kind)
-  (data "data" <subreddit-info-listing-data>))
+(define-json-type <subreddit>
+  (display-name "display_name")
+  (url))
 
 (define (reddit-main-editing-form)
   `(div (@ (class "ui centered page grid"))
@@ -159,17 +130,19 @@
                          (location . ,(string->uri location))))
             (lambda (port) #nil))))
 
+(define (reddit-listing->list json scm->json-type)
+  (let* ((listing (json-string->scm json))
+         (data (assoc-ref listing "data"))
+         (children (assoc-ref data "children")))
+    (map (lambda (c) (scm->json-type (assoc-ref c "data"))) (vector->list children))))
+
 (define (reddit-get-my-subreddits-list)
-  (let* ((response (oauth2-client-http-request *reddit-subreddits-mine-url* *access-token*
-                                               #:extra-headers `((user-agent . ,*reddit-user-agent*))))
-         (listing (json->subreddit-info-listing response))
-         (data (subreddit-info-listing-data listing)))
-    (map subreddit-info-listing-children-subreddit (subreddit-info-listing-data-children data))))
+  (let ((response (oauth2-client-http-request *reddit-subreddits-mine-url* *access-token*
+                                              #:extra-headers `((user-agent . ,*reddit-user-agent*)))))
+    (reddit-listing->list response scm->subreddit)))
 
 (define (reddit-feed-from-json json)
-  (let* ((listing (json->subreddit-listing json))
-         (data (subreddit-listing-data listing)))
-    (map subreddit-listing-children-subreddit (subreddit-listing-data-children data))))
+  (reddit-listing->list json scm->post))
 
 (define* (render-home subreddits #:optional (feed '()))
   `(html
@@ -189,20 +162,20 @@
 (define (render-subreddits-list subreddits)
   (map
    (lambda (subreddit)
-     `("(" (a (@ (href ,(string-append "http://127.0.0.1:8080/reddit" (subreddit-info-url subreddit))))
-              ,(subreddit-info-display-name subreddit))
+     `("(" (a (@ (href ,(string-append "http://127.0.0.1:8080/reddit" (subreddit-url subreddit))))
+              ,(subreddit-display-name subreddit))
        ") "))
    subreddits))
 
 (define (render-subreddit-feed feed)
   `(div (@ (class "ui relaxed divided list"))
-        ,(map render-subreddit feed)))
+        ,(map render-subreddit-post feed)))
 
-(define (render-subreddit subreddit)
+(define (render-subreddit-post post)
   `(div (@ (class "item"))
         (div (@ (class "content"))
-             (a (@ (class "header")) ,(subreddit-title subreddit))
-             (div (@ (class "description")) "Posted by /u/" ,(subreddit-author subreddit)))))
+             (a (@ (class "header") (href ,(post-url post))) ,(post-title post))
+             (div (@ (class "description")) "Posted by /u/" ,(post-author post)))))
 
 (define (reddit-subreddit-html subreddit)
   (let ((url (string-append "https://www.reddit.com/r/" subreddit "/.json")))
@@ -246,7 +219,7 @@
    (("reddit" "access") (reddit-access-handler request body))
    ;; /reddit/home
    (("reddit" "home") (reddit-home-handler request body))
-   ;; /reddit/r/xxx
+   ;; /reddit/r/<subreddit>
    (("reddit" "r" subreddit) (reddit-subreddit-handler request body subreddit))
    ;; Resource not found (404)
    (_ (not-found request))))
