@@ -32,19 +32,22 @@
   #:use-module (web client)
   #:use-module (json)
   #:export (oauth2-client-authorization-url
-            oauth2-client-access-token
+            oauth2-client-access-token-from-code
+            oauth2-client-access-token-from-credentials
             oauth2-client-http-request))
 
 (define* (oauth2-client-authorization-url url client-id
-                                          #:key (redirect-uri #f) (scopes #f))
+                                          #:key
+                                          (response-type 'code) (redirect-uri #f)
+                                          (scopes #f) (params '()))
   "Returns a couple of values: the complete authorization URL and the internally
 auto-generated state. The complete authorization URL is built from the given
 @var{url}, @var{client-id}, @var{redirect-uri}, a list of @var{scopes} and the
 state. A web application can then automatically redirect to the returned URL
 otherwise ask the user to connect to it with a web browser."
-  (let ((request (make-oauth-request url 'GET '())))
+  (let ((request (make-oauth-request url 'GET params)))
     (oauth-request-add-params request
-                              `((response_type . "code")
+                              `((response_type . ,(symbol->string response-type))
                                 (client_id . ,client-id)))
     (when redirect-uri
       (oauth-request-add-param request 'redirect_uri redirect-uri))
@@ -54,17 +57,19 @@ otherwise ask the user to connect to it with a web browser."
       (oauth-request-add-param request 'state state)
       (values (oauth-request-http-url request) state))))
 
-(define* (oauth2-client-access-token url code
-                                     #:key
-                                     (client-id #f) (redirect-uri #f)
-                                     (method 'POST) (auth '()) (extra-headers '()))
-  "Obtain an access token from the server @var{url} for the given
-@var{code}. The @var{code} is the value obtained after connecting to the
-authorization url. Optional @var{client-id}, @var{redirect-uri}, authorization
-header @var{auth} (e.g. @var{oauth-http-basic-auth}) and a list of
-@var{extra-headers} can be provided. Access tokens are used to connect to
-protected resources. An HTTP method can be selected with @var{method}."
-  (let ((request (make-oauth-request url method '())))
+(define* (oauth2-client-access-token-from-code url code
+                                               #:key
+                                               (client-id #f) (redirect-uri #f)
+                                               (method 'POST) (params '())
+                                               (auth '()) (extra-headers '()))
+  "Obtain an access token from the server @var{url} for the given @var{code}
+using an Authorization Code grant. Access tokens are used to connect to
+protected resources. The @var{code} is the value obtained after connecting to
+the authorization url. Optional @var{client-id}, @var{redirect-uri},
+authorization header @var{auth} (e.g.  @var{oauth-http-basic-auth}), additional
+parameters @var{params} as an alist and a list of @var{extra-headers} can be
+provided. An HTTP method can be selected with @var{method}."
+  (let ((request (make-oauth-request url method params)))
     (oauth-request-add-params request
                               `((grant_type . "authorization_code")
                                 (code . ,code)))
@@ -72,6 +77,24 @@ protected resources. An HTTP method can be selected with @var{method}."
       (oauth-request-add-param request 'client_id client-id))
     (when redirect-uri
       (oauth-request-add-param request 'redirect_uri redirect-uri))
+    (receive (response body)
+        (oauth2-http-request request
+                             #:headers (append `((authorization . ,auth))
+                                               extra-headers))
+      (json-string->scm (utf8->string body)))))
+
+(define* (oauth2-client-access-token-from-credentials url client-id client-secret
+                                                      #:key
+                                                      (auth-type 'header)
+                                                      (method 'POST) (params '())
+                                                      (extra-headers '()))
+  "Obtain an access token from the server @var{url} for the given
+@var{client-id} and @var{client-secret} using a Client Credentials grant. Access
+tokens are used to connect to protected resources. Optional... An HTTP method
+can be selected with @var{method}."
+  (let ((request (make-oauth-request url method params))
+        (auth (oauth-http-basic-oauth client-id client-secret)))
+    (oauth-request-add-param request 'grant_type "client_credentials")
     (receive (response body)
         (oauth2-http-request request
                              #:headers (append `((authorization . ,auth))
