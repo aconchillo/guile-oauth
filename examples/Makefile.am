@@ -19,4 +19,4 @@
 # along with guile-oauth. If not, see https://www.gnu.org/licenses/.
 #
 
-EXTRA_DIST = oauth1/twitter.scm
+EXTRA_DIST = oauth1/twitter.scm oauth2/reddit.scm
