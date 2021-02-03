@@ -93,7 +93,7 @@ provided. An HTTP method can be selected with @var{method}."
 tokens are used to connect to protected resources. Optional... An HTTP method
 can be selected with @var{method}."
   (let ((request (make-oauth-request url method params))
-        (auth (oauth-http-basic-oauth client-id client-secret)))
+        (auth (oauth-http-basic-auth client-id client-secret)))
     (oauth-request-add-param request 'grant_type "client_credentials")
     (receive (response body)
         (oauth2-http-request request

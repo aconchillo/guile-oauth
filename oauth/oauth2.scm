@@ -24,7 +24,8 @@
 ;;; Code:
 
 (define-module (oauth oauth2)
-  #:use-module (oauth oauth2 client))
+  #:use-module (oauth oauth2 client)
+  #:use-module (oauth oauth2 request))
 
 (define-syntax re-export-modules
   (syntax-rules ()
@@ -34,6 +35,7 @@
                     (resolve-interface '(mod ...)))
        ...))))
 
-(re-export-modules (oauth oauth2 client))
+(re-export-modules (oauth oauth2 client)
+                   (oauth oauth2 request))
 
 ;;; (oauth oauth2) ends here

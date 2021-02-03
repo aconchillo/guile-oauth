@@ -24,6 +24,7 @@ objdir = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache/oauth/oauth2
 
 SOURCES = \
   client.scm \
+  request.scm \
   #
 
 GOBJECTS = $(SOURCES:%.scm=%.go)
