@@ -84,7 +84,8 @@ browser."
   "Obtain an access token from the server @var{url} for the given client
 @var{credentials} (key and secret), request token @var{response} and
 @var{verifier}. Access tokens are used to connect to protected resources. An
-HTTP method can be selected with @var{method}."
+HTTP method can be selected with @var{method} and additional @var{extra-headers}
+can be provided."
   (let ((request (make-oauth-request url method '())))
     (oauth1-request-add-default-params request)
     (oauth-request-add-param request
