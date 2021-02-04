@@ -29,6 +29,7 @@
 (use-modules (json)
              (oauth oauth1)
              (oauth utils)
+             (ice-9 match)
              (sxml simple)
              (rnrs bytevectors)
              (web server)
@@ -50,6 +51,16 @@
 
 (define *request-token* (make-oauth1-credentials "" ""))
 (define *access-token* (make-oauth1-credentials "" ""))
+
+(define-json-type <user>
+  (name)
+  (profile-image-url "profile_image_url"))
+
+(define-json-type <tweet>
+  (text)
+  (user "user" <user>)
+  (likes "favorite_count")
+  (retweets "retweet_count"))
 
 (define (twitter-main-editing-form)
   `(div (@ (class "ui centered page grid"))
@@ -134,32 +145,34 @@
             (link (@ (rel "stylesheet")
                      (href "https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.6/semantic.min.css"))))
       (body
-       "(" (a (@ (href "http://127.0.0.1:8080/twitter/home_timeline"))
-              "Home timeline")
-       ") "
-       "(" (a (@ (href "http://127.0.0.1:8080/twitter/user_timeline"))
-              "User timeline")
-       ") "
-       (div (@ (class "ui centered page compact grid"))
+       (div (@ (style "margin-top: 20px"))
+            (h2 (@ (class "ui centered header"))
+             "(" (a (@ (href "http://127.0.0.1:8080/twitter/home_timeline"))
+                    "Home timeline")
+             ") "
+             "(" (a (@ (href "http://127.0.0.1:8080/twitter/user_timeline"))
+                    "User timeline")
+             ") "))
+       (div (@ (style "margin-top: 20px") (class "ui centered page compact grid"))
             (div (@ (class "ui eight wide column segment"))
                  (div (@ (class "ui items vertically divided"))
-                      ,(map render-tweet (vector->list tweets)))))))))
+                      ,(map (compose render-tweet scm->tweet) (vector->list tweets)))))))))
 
 (define (render-tweet tweet)
-  (let ((user (assoc-ref tweet "user")))
+  (let ((user (tweet-user tweet)))
     `(div (@ (class "item"))
           (div (@ (class "ui mini circular image"))
-               (img (@ (src ,(assoc-ref user "profile_image_url")))))
+               (img (@ (src ,(user-profile-image-url user)))))
           (div (@ (class "content"))
-               (div (@ (class "header")) ,(assoc-ref user "name"))
-               (div (@ (class "description")) ,(assoc-ref tweet "text"))
+               (div (@ (class "header")) ,(user-name user))
+               (div (@ (class "description")) ,(tweet-text tweet))
                (div (@ (class "ui grid very compact extra"))
                     (div (@ (class "three wide column"))
                          (i (@ (class "retweet icon")) "")
-                         ,(assoc-ref tweet "retweet_count"))
+                         ,(tweet-retweets tweet))
                     (div (@ (class "three wide column"))
                          (i (@ (class "heart outline icon")) "")
-                         ,(assoc-ref tweet "favorite_count")))))))
+                         ,(tweet-likes tweet)))))))
 
 (define (twitter-timeline url)
   (twitter-timeline-html
@@ -193,24 +206,19 @@
 ;; This is the server main handler. It will check if the given request
 ;; is valid, and if so it will call the right handler.
 (define (main-handler request body)
-  (cond
+  (match (request-path-components request)
    ;; /twitter
-   ((equal? (request-path-components request) '("twitter"))
-    (twitter-main-form-handler request body))
+   (("twitter") (twitter-main-form-handler request body))
    ;; /twitter/auth
-   ((equal? (request-path-components request) '("twitter" "auth"))
-    (twitter-auth-handler request body))
+   (("twitter" "auth") (twitter-auth-handler request body))
    ;; /twitter/access
-   ((equal? (request-path-components request) '("twitter" "access"))
-    (twitter-access-handler request body))
+   (("twitter" "access") (twitter-access-handler request body))
    ;; /twitter/home_timeline
-   ((equal? (request-path-components request) '("twitter" "home_timeline"))
-    (twitter-home-timeline-handler request body))
+   (("twitter" "home_timeline") (twitter-home-timeline-handler request body))
    ;; /twitter/user_timeline
-   ((equal? (request-path-components request) '("twitter" "user_timeline"))
-    (twitter-user-timeline-handler request body))
+   (("twitter" "user_timeline") (twitter-user-timeline-handler request body))
    ;; Resource not found (404)
-   (else (not-found request))))
+   (_ (not-found request))))
 
 (display "\nNow go to http://127.0.0.1:8080/twitter\n")
 
