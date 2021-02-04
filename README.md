@@ -12,7 +12,7 @@ It depends on the following Guile version and modules:
 - [Guile](https://www.gnu.org/software/guile/) >= 2.2.0.
 - [GnuTLS](https://www.gnutls.org/) Guile bindings (for HTTPS support).
 - [guile-gcrypt](https://notabug.org/cwebber/guile-gcrypt/) >= 0.3.0.
-- [guile-json](https://github.com/aconchillo/guile-json/) >= 3.0.0 (only to run Twitter example).
+- [guile-json](https://github.com/aconchillo/guile-json/) >= 4.5.0.
 
 
 # Installation
