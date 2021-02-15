@@ -46,7 +46,7 @@
 
 (define* (oauth2-client-authorization-url url client-id
                                           #:key
-                                          (response-type 'code) (redirect-uri #f)
+                                          (redirect-uri #f)
                                           (scopes #f) (params '()))
   "Returns a couple of values: the complete authorization URL and the internally
 auto-generated state. The complete authorization URL is built from the given
@@ -55,7 +55,7 @@ state. A web application can then automatically redirect to the returned URL
 otherwise ask the user to connect to it with a web browser."
   (let ((request (make-oauth-request url 'GET params)))
     (oauth-request-add-params request
-                              `((response_type . ,(symbol->string response-type))
+                              `((response_type . "code")
                                 (client_id . ,client-id)))
     (when redirect-uri
       (oauth-request-add-param request 'redirect_uri redirect-uri))
