@@ -25,6 +25,7 @@
 
 (define-module (oauth oauth2 client)
   #:use-module (oauth oauth2 request)
+  #:use-module (oauth oauth2 response)
   #:use-module (oauth request)
   #:use-module (oauth utils)
   #:use-module (ice-9 receive)
@@ -68,7 +69,7 @@ protected resources. The @var{code} is the value obtained after connecting to
 the authorization url. Optional @var{client-id}, @var{redirect-uri},
 authorization header @var{auth} (e.g.  @var{oauth-http-basic-auth}), additional
 parameters @var{params} as an alist and a list of @var{extra-headers} can be
-provided. An HTTP method can be selected with @var{method}."
+provided. An HTTP method can also be selected with @var{method}."
   (let ((request (make-oauth-request url method params)))
     (oauth-request-add-params request
                               `((grant_type . "authorization_code")
@@ -81,7 +82,7 @@ provided. An HTTP method can be selected with @var{method}."
         (oauth2-http-request request
                              #:headers (append `((authorization . ,auth))
                                                extra-headers))
-      (json-string->scm (utf8->string body)))))
+      (oauth2-http-body->token response body))))
 
 (define* (oauth2-client-access-token-from-credentials url client-id client-secret
                                                       #:key
@@ -90,8 +91,9 @@ provided. An HTTP method can be selected with @var{method}."
                                                       (extra-headers '()))
   "Obtain an access token from the server @var{url} for the given
 @var{client-id} and @var{client-secret} using a Client Credentials grant. Access
-tokens are used to connect to protected resources. Optional... An HTTP method
-can be selected with @var{method}."
+tokens are used to connect to protected resources. Optional parameters
+@var{params} can be provided as an alist, as well as a list of
+@var{extra-headers}. An HTTP method can be selected with @var{method}."
   (let ((request (make-oauth-request url method params))
         (auth (oauth-http-basic-auth client-id client-secret)))
     (oauth-request-add-param request 'grant_type "client_credentials")
@@ -99,14 +101,14 @@ can be selected with @var{method}."
         (oauth2-http-request request
                              #:headers (append `((authorization . ,auth))
                                                extra-headers))
-      (json-string->scm (utf8->string body)))))
+      (oauth2-http-body->token response body))))
 
 (define* (oauth2-client-http-request url token
                                      #:key
                                      (method 'GET) (params '()) (extra-headers '()))
   "Access a server's protected resource @var{url} with the given access
-@var{token} response previsouly obtained. Returns a string. An HTTP method can
-be selected with @var{method}, additional parameters can be given in
+@var{token} full response previously obtained. Returns a string. An HTTP method
+can be selected with @var{method}, additional parameters can be given via
 @var{params} as an alist and a list of @var{extra-headers} can also be
 specified."
   (let ((request (make-oauth-request url method params))

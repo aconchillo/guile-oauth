@@ -1,4 +1,4 @@
-;;; (oauth oauth2 request) --- Guile OAuth 1.0 implementation.
+;;; (oauth oauth2 request) --- Guile OAuth 2.0 implementation.
 
 ;; Copyright (C) 2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
