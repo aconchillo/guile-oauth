@@ -107,11 +107,11 @@ can be provided."
                                      (extra-headers '())
                                      (signature oauth1-signature-hmac-sha1))
   "Access a server's protected resource @var{url} with the given client
-@var{credentials} (key and secret) and an access token @var{response}. Returns a
-string. An HTTP method can be selected with @var{method}, additional parameters
-can be given in @var{params} as an alist and a list of @var{extra-headers} can
-be provided as well. Also, an optional @var{signature} algorithm can be
-specified."
+@var{credentials} (key and secret) and an access token @var{response}. Returns
+two values, the response and the body as a string. An HTTP method can be
+selected with @var{method}, additional parameters can be given in @var{params}
+as an alist and a list of @var{extra-headers} can be provided as well. Also, an
+optional @var{signature} algorithm can be specified."
   (let ((request (make-oauth-request url method params)))
     (oauth1-request-add-default-params request)
     (oauth-request-add-param request
@@ -123,6 +123,6 @@ specified."
     (oauth1-request-sign request credentials response #:signature signature)
     (receive (response body)
         (oauth1-http-request request #:extra-headers extra-headers)
-      (if (string? body) body (utf8->string body)))))
+      (values response (if (string? body) body (utf8->string body))))))
 
 ;;; (oauth oauth1 client) ends here

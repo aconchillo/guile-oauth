@@ -137,9 +137,10 @@
     (map (lambda (c) (scm->json-type (assoc-ref c "data"))) (vector->list children))))
 
 (define (reddit-get-my-subreddits-list)
-  (let ((response (oauth2-client-http-request *reddit-subreddits-mine-url* *access-token*
-                                              #:extra-headers `((user-agent . ,*reddit-user-agent*)))))
-    (reddit-listing->list response scm->subreddit)))
+  (receive (response body)
+      (oauth2-client-http-request *reddit-subreddits-mine-url* *access-token*
+                                  #:extra-headers `((user-agent . ,*reddit-user-agent*)))
+    (reddit-listing->list body scm->subreddit)))
 
 (define (reddit-feed-from-json json)
   (reddit-listing->list json scm->post))

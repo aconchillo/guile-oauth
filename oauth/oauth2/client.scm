@@ -148,16 +148,16 @@ parameters @var{params} can be provided as an alist, as well as a list of
 (define* (oauth2-client-http-request url token
                                      #:key
                                      (method 'GET) (params '()) (extra-headers '()))
-  "Access a server's protected resource @var{url} with the given access
-@var{token} full response previously obtained. Returns a string. An HTTP method
-can be selected with @var{method}, additional parameters can be given via
-@var{params} as an alist and a list of @var{extra-headers} can also be
-specified."
+  "Access a server's protected resource @var{url} with the access @var{token}
+previously obtained. Returns two values, the response and the body as a
+string. An HTTP method can be selected with @var{method}, additional parameters
+can be given via @var{params} as an alist and a list of @var{extra-headers} can
+also be specified."
   (let ((request (make-oauth-request url method params))
         (auth (oauth2-http-auth-from-token token)))
     (receive (response body)
         (oauth2-http-request request
                              #:headers (append auth extra-headers))
-      (if (string? body) body (utf8->string body)))))
+      (values response (if (string? body) body (utf8->string body))))))
 
 ;;; (oauth oauth2 client) ends here

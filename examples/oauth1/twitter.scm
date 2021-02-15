@@ -30,6 +30,7 @@
              (oauth oauth1)
              (oauth utils)
              (ice-9 match)
+             (ice-9 receive)
              (sxml simple)
              (rnrs bytevectors)
              (web server)
@@ -175,8 +176,9 @@
                          ,(tweet-likes tweet)))))))
 
 (define (twitter-timeline url)
-  (twitter-timeline-html
-   (oauth1-client-request url *twitter-credentials* *access-token*)))
+  (receive (response body)
+      (oauth1-client-http-request url *twitter-credentials* *access-token*)
+    (twitter-timeline-html body)))
 
 (define (twitter-tweets-handler url)
   (lambda (request body)
