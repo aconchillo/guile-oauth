@@ -54,24 +54,35 @@ guile-oauth, for example:
 - (**oauth1-client-request-token** url credentials) : Obtain a request token
   from the server *url* for the given client *credentials*.
 
-  **Returns** : a service response.
+  **Returns** : a service reponse that includes the request token.
 
   **Throws**
 
   - *oauth-invalid-response* : if an unexpected response was returned from the
     server. It includes the response and body as arguments.
 
-- (**oauth1-client-authorization-url** url request-token) : Returns a complete
-  authorization URL given the server *url* and a *request token*.
+- (**oauth1-client-authorization-url** url [request-token] #:params) : Returns a
+  complete authorization URL given the server *url* and the previously obtained
+  *request-token* response.
+
+  - *#:params* : a list of additional parameters.
 
   **Returns** : an authorization URL the client should connect to in order to
   grant permissions and obtain a verification code.
 
-- (**oauth1-client-access-token** url credentials request-token verifier) :
-  Obtain an access token from the server *url* for the given client
-  *credentials*, *request token* and *verifier*.
+- (**oauth1-client-access-token** url credentials response verifier #:method
+  #:extra-headers #:signature) : Obtain an access token from the server *url*
+  for the given client *credentials*, request token *response* and *verifier*.
 
-  **Returns** : a service response.
+  - *#:method* : the HTTP method to request the access token (defaults to
+    *'POST*).
+
+  - *#:extra-headers* : a list of additional HTTP headers.
+
+  - *#:signature* : the signature algorithm to use (defaults to
+    *oauth1-signature-hmac-sha1*).
+
+  **Returns** : a service response that includes the access token.
 
   **Throws**
 
@@ -79,8 +90,18 @@ guile-oauth, for example:
     server. It includes the response and body as arguments.
 
 - (**oauth1-client-http-request** url credentials access-token) : Access a
-  server's protected resource url with the given client credentials and an
-  access token.
+  server's protected resource url with the given client credentials and a
+  *access-token* response.
+
+  - *#:method* : the HTTP method to request the access token (defaults to
+    *'GET*).
+
+  - *#:params* : a list of additional parameters.
+
+  - *#:extra-headers* : a list of additional HTTP headers.
+
+  - *#:signature* : the signature algorithm to use (defaults to
+    *oauth1-signature-hmac-sha1*).
 
   **Returns** : a couple of values, the response and the body (as a string).
 
@@ -245,10 +266,10 @@ guile-oauth, for example:
 ## OAuth 1.0a: Twitter client
 
 The following example details how to obtain the tweets of your Twitter home
-timeline. The complete example is available as a web application under the
+timeline. A complete example is available as a web application under the
 *examples* directory.
 
-- Load the OAuth module:
+- Load the OAuth 1.0a module:
 
 ```
 > (use-modules (oauth oauth1))
@@ -257,11 +278,11 @@ timeline. The complete example is available as a web application under the
 - Define our Twitter URLs and application credentials:
 
 ```
-> (define request-url "https://api.twitter.com/oauth/request_token")
-> (define authorize-url "https://api.twitter.com/oauth/authorize")
-> (define access-url "https://api.twitter.com/oauth/access_token")
-> (define home-timeline "https://api.twitter.com/1.1/statuses/home_timeline.json")
-> (define credentials (make-oauth1-credentials "key" "secret"))
+> (define *request-url* "https://api.twitter.com/oauth/request_token")
+> (define *auth-url* "https://api.twitter.com/oauth/authorize")
+> (define *access-url* "https://api.twitter.com/oauth/access_token")
+> (define *home-timeline* "https://api.twitter.com/1.1/statuses/home_timeline.json")
+> (define *credentials* (make-oauth1-credentials "key" "secret"))
 ```
 
   The *key* and *secret* are provided by Twitter once you register a new
@@ -270,13 +291,13 @@ timeline. The complete example is available as a web application under the
 - Obtain a request token:
 
 ```
-> (define request-token (oauth1-client-request-token request-url credentials))
+> (define request-token (oauth1-client-request-token *request-url* *credentials*))
 ```
 
 - Connect to the following returned URL for authorizing the request token:
 
 ```
-> (oauth1-client-authorization-url authorize-url request-token)
+> (oauth1-client-authorization-url *auth-url* request-token)
 ```
 
   Here you will need to login to Twitter or simply authorize your
@@ -286,7 +307,7 @@ timeline. The complete example is available as a web application under the
 
 ```
 > (define access-token
-    (oauth1-client-access-token access-url credentials request-token "verifier"))
+    (oauth1-client-access-token *access-url* *credentials* request-token "verifier"))
 ```
 
   The *verifier* is the string given by Twitter in the previous step.
@@ -294,8 +315,47 @@ timeline. The complete example is available as a web application under the
 - Get your tweets:
 
 ```
-> (oauth1-client-http-request home-timeline credentials access-token)
+> (oauth1-client-http-request *home-timeline* *credentials* access-token)
 ```
+
+## OAuth 2.0: Reddit client
+
+The following example details how to obtain a Reddit feed. A complete example is
+available as a web application under the *examples* directory.
+
+- Load the OAuth 2.0 module:
+
+```
+> (use-modules (oauth oauth2))
+```
+
+- Define Reddit URLs:
+
+```
+> (define *user-agent* "guile:guile-oauth:1.0.0 (by /u/aconchillo)")
+> (define *access-url* "https://www.reddit.com/api/v1/access_token")
+> (define *reddit-feed-url* "https://oauth.reddit.com/r/scheme/new")
+```
+
+- Obtain the access token that will allow us to access protected resources using
+  Client Credentials grant:
+
+```
+> (define access-token
+    (oauth2-client-access-token-from-credentials *access-url* "client-id" "secret"))
+```
+
+  The *client-id* and *secret* are provided by Reddit once you register a new
+  application at https://www.reddit.com/prefs/apps.
+
+- Get your reddit feed:
+
+```
+> (oauth2-client-http-request *reddit-feed-url* access-token
+                              #:extra-headers `((user-agent . ,*user-agent*)))
+```
+
+  The *user-agent* is a header required by Reddit.
 
 # License
 
