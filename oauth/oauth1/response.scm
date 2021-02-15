@@ -58,7 +58,7 @@ not it will display a warning."
                (secret (assoc-ref params "oauth_token_secret"))
                (callback-confirmed (assoc-ref params "oauth_callback_confirmed")))
           (unless (and token secret)
-            (throw 'oauth-invalid-response response))
+            (throw 'oauth-invalid-response response body))
           (unless (and callback-confirmed (string=? callback-confirmed "true"))
             (warn "Missing oauth_callback_confirmed=true in response as required by OAuth1.0a."))
           ;; Only leave optional parameters in params alist.
@@ -66,6 +66,6 @@ not it will display a warning."
           (set! params (assoc-remove! params "oauth_token_secret"))
           (set! params (assoc-remove! params "oauth_callback_confirmed"))
           (make-oauth1-response token secret params)))
-      (lambda _ (throw 'oauth-invalid-response response)))))
+      (lambda _ (throw 'oauth-invalid-response response body)))))
 
 ;;; (oauth oauth1 response) ends here

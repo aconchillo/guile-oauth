@@ -37,8 +37,8 @@ an exception if not."
                (token-type (assoc-ref token-response "token_type"))
                (access-token (assoc-ref token-response "access_token")))
           (unless (and token-type access-token)
-            (throw 'oauth-invalid-response response))
+            (throw 'oauth-invalid-response response body))
           token-response))
-      (lambda _ (throw 'oauth-invalid-response response)))))
+      (lambda _ (throw 'oauth-invalid-response response body)))))
 
 ;;; (oauth oauth2 response) ends here
