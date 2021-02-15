@@ -38,6 +38,12 @@
             oauth2-client-refresh-token
             oauth2-client-http-request))
 
+(define (auth-type-header? type)
+  (eq? type 'header))
+
+(define (auth-type-params? type)
+  (eq? type 'params))
+
 (define* (oauth2-client-authorization-url url client-id
                                           #:key
                                           (response-type 'code) (redirect-uri #f)
@@ -90,17 +96,24 @@ provided. An HTTP method can also be selected with @var{method}."
                                                       (method 'POST) (params '())
                                                       (extra-headers '()))
   "Obtain an access token from the server @var{url} for the given
-@var{client-id} and @var{client-secret} using a Client Credentials grant. Access
-tokens are used to connect to protected resources. Optional parameters
-@var{params} can be provided as an alist, as well as a list of
-@var{extra-headers}. An HTTP method can be selected with @var{method}."
-  (let ((request (make-oauth-request url method params))
-        (auth (oauth-http-basic-auth client-id client-secret)))
+@var{client-id} and @var{client-secret} using a Client Credentials grant. the
+authentication method to provide the client ID and secret can be specified in
+@var{auth-type} ('params or 'header, defaults to 'header). Access tokens are
+used to connect to protected resources. Optional parameters @var{params} can be
+provided as an alist, as well as a list of @var{extra-headers}. An HTTP method
+can be selected with @var{method}."
+  (let ((request (make-oauth-request url method params)))
     (oauth-request-add-param request 'grant_type "client_credentials")
-    (receive (response body)
+    (when (auth-type-params? auth-type)
+      (oauth-request-add-params request
+                                `((client_id . ,client-id)
+                                  (client_secret . ,client-secret))))
+    (let ((auth (if (auth-type-header? auth-type)
+                    (oauth-http-basic-auth client-id client-secret) '())))
+      (receive (response body)
         (oauth2-http-request request
                              #:headers (append auth extra-headers))
-      (oauth2-http-body->token response body))))
+      (oauth2-http-body->token response body)))))
 
 (define* (oauth2-client-refresh-token url token
                                       #:key
@@ -110,21 +123,27 @@ tokens are used to connect to protected resources. Optional parameters
                                       (extra-headers '()))
   "Refresh an access token from the server @var{url} with the previously
 obtained @var{token}. If needed, @var{client-id} and @var{client-secret} can be
-specified to authenticate this request. Optional parameters @var{params} can be
-provided as an alist, as well as a list of @var{extra-headers}. An HTTP method
-can be selected with @var{method}."
+specified to authenticate this request using the authentication method specified
+in @var{auth-type} ('params or 'header, defaults to 'header). Optional
+parameters @var{params} can be provided as an alist, as well as a list of
+@var{extra-headers}. An HTTP method can be selected with @var{method}."
   (let ((request (make-oauth-request url method params))
-        (auth (oauth-http-basic-auth client-id client-secret))
         (refresh-token (assoc-ref token "refresh_token")))
     (unless refresh-token
       (throw 'oauth-invalid-token token))
     (oauth-request-add-params request
                               `((grant_type . "refresh_token")
                                 (refresh_token . ,refresh-token)))
-    (receive (response body)
+    (when (auth-type-params? auth-type)
+      (oauth-request-add-params request
+                                `((client_id . ,client-id)
+                                  (client_secret . ,client-secret))))
+    (let ((auth (if (auth-type-header? auth-type)
+                    (oauth-http-basic-auth client-id client-secret) '())))
+      (receive (response body)
         (oauth2-http-request request
                              #:headers (append auth extra-headers))
-      (oauth2-http-body->token response body))))
+      (oauth2-http-body->token response body)))))
 
 (define* (oauth2-client-http-request url token
                                      #:key
