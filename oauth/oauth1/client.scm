@@ -36,7 +36,7 @@
   #:export (oauth1-client-request-token
             oauth1-client-authorization-url
             oauth1-client-access-token
-            oauth1-client-request))
+            oauth1-client-http-request))
 
 (define* (oauth1-client-request-token url credentials
                                       #:optional (callback "oob")
@@ -100,12 +100,12 @@ can be provided."
         (oauth1-http-request request #:extra-headers extra-headers)
       (oauth1-http-body->response response body))))
 
-(define* (oauth1-client-request url credentials response
-                                #:key
-                                (method 'GET)
-                                (params '())
-                                (extra-headers '())
-                                (signature oauth1-signature-hmac-sha1))
+(define* (oauth1-client-http-request url credentials response
+                                     #:key
+                                     (method 'GET)
+                                     (params '())
+                                     (extra-headers '())
+                                     (signature oauth1-signature-hmac-sha1))
   "Access a server's protected resource @var{url} with the given client
 @var{credentials} (key and secret) and an access token @var{response}. Returns a
 string. An HTTP method can be selected with @var{method}, additional parameters
