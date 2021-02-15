@@ -35,6 +35,7 @@
   #:export (oauth2-client-authorization-url
             oauth2-client-access-token-from-code
             oauth2-client-access-token-from-credentials
+            oauth2-client-refresh-token
             oauth2-client-http-request))
 
 (define* (oauth2-client-authorization-url url client-id
@@ -80,8 +81,7 @@ provided. An HTTP method can also be selected with @var{method}."
       (oauth-request-add-param request 'redirect_uri redirect-uri))
     (receive (response body)
         (oauth2-http-request request
-                             #:headers (append `((authorization . ,auth))
-                                               extra-headers))
+                             #:headers (append auth extra-headers))
       (oauth2-http-body->token response body))))
 
 (define* (oauth2-client-access-token-from-credentials url client-id client-secret
@@ -99,8 +99,31 @@ tokens are used to connect to protected resources. Optional parameters
     (oauth-request-add-param request 'grant_type "client_credentials")
     (receive (response body)
         (oauth2-http-request request
-                             #:headers (append `((authorization . ,auth))
-                                               extra-headers))
+                             #:headers (append auth extra-headers))
+      (oauth2-http-body->token response body))))
+
+(define* (oauth2-client-refresh-token url token
+                                      #:key
+                                      (client-id #f) (client-secret #f)
+                                      (auth-type 'header)
+                                      (method 'POST) (params '())
+                                      (extra-headers '()))
+  "Refresh an access token from the server @var{url} with the previously
+obtained @var{token}. If needed, @var{client-id} and @var{client-secret} can be
+specified to authenticate this request. Optional parameters @var{params} can be
+provided as an alist, as well as a list of @var{extra-headers}. An HTTP method
+can be selected with @var{method}."
+  (let ((request (make-oauth-request url method params))
+        (auth (oauth-http-basic-auth client-id client-secret))
+        (refresh-token (assoc-ref token "refresh_token")))
+    (unless refresh-token
+      (throw 'oauth-invalid-token token))
+    (oauth-request-add-params request
+                              `((grant_type . "refresh_token")
+                                (refresh_token . ,refresh-token)))
+    (receive (response body)
+        (oauth2-http-request request
+                             #:headers (append auth extra-headers))
       (oauth2-http-body->token response body))))
 
 (define* (oauth2-client-http-request url token
@@ -115,8 +138,7 @@ specified."
         (auth (oauth2-http-auth-from-token token)))
     (receive (response body)
         (oauth2-http-request request
-                             #:headers (append `((authorization . ,auth))
-                                               extra-headers))
+                             #:headers (append auth extra-headers))
       (if (string? body) body (utf8->string body)))))
 
 ;;; (oauth oauth2 client) ends here

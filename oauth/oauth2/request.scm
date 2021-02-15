@@ -36,10 +36,13 @@
 type (e.g. bearer or mac)."
   (let ((token-type (assoc-ref token "token_type"))
         (access-token (assoc-ref token "access_token")))
+    (unless (and token-type access-token)
+      (throw 'oauth-invalid-token token))
     (cond
      ((string=? token-type "bearer")
       (parse-header 'authorization
-                    (string-append "bearer " access-token))))))
+                    (string-append "bearer " access-token)))
+     (else (throw 'oauth-invalid-token token)))))
 
 ;;
 ;; Request HTTP/HTTPS

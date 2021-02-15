@@ -37,10 +37,14 @@
 (define ASCII_ALPHABET "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 (define (oauth-http-basic-auth username password)
-  "Create HTTP basic authorization credentials."
-  (let ((value (string-append username ":" password)))
-    (parse-header 'authorization
-                (string-append "Basic " (base64-encode (string->utf8 value))))))
+  "Create an HTTP basic authorization credentials header. If username or
+password are false return nil."
+  (cond
+   ((and username password)
+    (let* ((value (string-append username ":" password))
+           (basic-auth (string-append "Basic " (base64-encode (string->utf8 value)))))
+      `((authorization . ,(parse-header 'authorization basic-auth)))))
+   (else '())))
 
 (define* (oauth-parse-www-form-urlencoded str #:optional (charset "utf-8"))
   "Parse the string @var{str} of name/value pairs as defined by the
