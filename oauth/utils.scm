@@ -38,7 +38,7 @@
 
 (define (oauth-http-basic-auth username password)
   "Create an HTTP basic authorization credentials header. If username or
-password are false return nil."
+password are false returns nil."
   (cond
    ((and username password)
     (let* ((value (string-append username ":" password))

@@ -52,35 +52,163 @@ guile-oauth, for example:
 ## OAuth 1.0a
 
 - (**oauth1-client-request-token** url credentials) : Obtain a request token
-  from the server url for the given client credentials.
+  from the server *url* for the given client *credentials*.
 
   **Returns** : a service response.
 
   **Throws**
 
   - *oauth-invalid-response* : if an unexpected response was returned from the
-    server.
+    server. It includes the response and body as arguments.
 
 - (**oauth1-client-authorization-url** url request-token) : Returns a complete
-  authorization URL given the server url and a request token.
+  authorization URL given the server *url* and a *request token*.
 
   **Returns** : an authorization URL the client should connect to in order to
   grant permissions and obtain a verification code.
 
 - (**oauth1-client-access-token** url credentials request-token verifier) :
-  Obtain an access token from the server url for the given client credentials,
-  request token and verifier.
+  Obtain an access token from the server *url* for the given client
+  *credentials*, *request token* and *verifier*.
 
   **Returns** : a service response.
 
   **Throws**
 
   - *oauth-invalid-response* : if an unexpected response was returned from the
-    server.
+    server. It includes the response and body as arguments.
 
-- (**oauth1-client-request** url credentials access-token) : Access a server's
-  protected resource url with the given client credentials and an access
-  token.
+- (**oauth1-client-http-request** url credentials access-token) : Access a
+  server's protected resource url with the given client credentials and an
+  access token.
+
+  **Returns** : a couple of values, the response and the body (as a string).
+
+## OAuth 2.0
+
+- (**oauth2-client-authorization-url** url client-id #:redirect-uri #:scopes
+  #:params) : Returns a complete authorization URL given the server url and the
+  client ID.
+
+  - *#:redirect-uri* : the URL the user should be redirected after the user
+     authorizes the application.
+
+  - *#:scopes* : a list of scopes (given as strings).
+
+  - *#:params* : a list of additional parameters.
+
+  **Returns** : Returns a couple of values: the complete authorization URL and
+  the internally auto-generated state. The authorization URL is the URL the
+  client should connect to in order to grant permissions and obtain an
+  authorization code.
+
+- (**oauth2-client-access-token-from-code** url code #:client-id #:redirect-uri
+  #:method #:params #:auth #:extra-headers) : Obtain an access token from the
+  server *url* for the given *code* using an Authorization Code grant.
+
+  - *#:client-id* : the client ID.
+
+  - *#:redirect-uri* : the URL the user was redirected after the user authorizes
+     the application.
+
+  - *#:method* : the HTTP method to request the access token (defaults to
+    *'POST*).
+
+  - *#:params* : a list of additional parameters.
+
+  - *#:auth* : an authorization header (see *oauth-http-basic-auth*).
+
+  - *#:extra-headers* : a list of additional HTTP headers.
+
+  **Returns** : an access token.
+
+  **Throws**
+
+  - *oauth-invalid-response* : if an unexpected response was returned from the
+    server. It includes the response and body as arguments.
+
+- (**oauth2-client-access-token-from-credentials** url client-id client-secret
+  #:auth-type #:method #:params #:extra-headers) : Obtain an access token from
+  the server *url* using a Client Credentials grant.
+
+  - *client-id* : the client ID.
+
+  - *client-secret* : the client secret.
+
+  - *#:auth-type* : the authentication method to use (*'header* or *'params*,
+     defaults to *'header*).
+
+  - *#:method* : the HTTP method to request the access token (defaults to
+    *'POST*).
+
+  - *#:params* : a list of additional parameters.
+
+  - *#:extra-headers* : a list of additional HTTP headers.
+
+  **Returns** : an access token.
+
+  **Throws**
+
+  - *oauth-invalid-response* : if an unexpected response was returned from the
+    server. It includes the response and body as arguments.
+
+- (**oauth2-client-refresh-token** url #:client-id #:client-secret #:auth-type
+  #:method #:params #:extra-headers) : Obtain an access token from the server
+  *url* using a Client Credentials grant.
+
+  - *#:client-id* : the client ID.
+
+  - *#:client-secret* : the client secret.
+
+  - *#:auth-type* : the authentication method to use (*'header* or *'params*,
+     defaults to *'header*).
+
+  - *#:method* : the HTTP method to request the access token (defaults to
+    *'POST*).
+
+  - *#:params* : a list of additional parameters.
+
+  - *#:extra-headers* : a list of additional HTTP headers.
+
+  **Returns** : an access token.
+
+  **Throws**
+
+  - *oauth-invalid-response* : if an unexpected response was returned from the
+    server. It includes the response and body as arguments.
+
+- (**oauth2-client-refresh-token** url #:client-id #:client-secret #:auth-type
+  #:method #:params #:extra-headers) : Obtain an access token from the server
+  *url* using a Client Credentials grant.
+
+  - *#:client-id* : the client ID.
+
+  - *#:client-secret* : the client secret.
+
+  - *#:auth-type* : the authentication method to use (*'header* or *'params*,
+     defaults to *'header*).
+
+  - *#:method* : the HTTP method to request the access token (defaults to
+    *'POST*).
+
+  - *#:params* : a list of additional parameters.
+
+  - *#:extra-headers* : a list of additional HTTP headers.
+
+  **Returns** : an access token.
+
+- (**oauth2-client-http-request** url token #:method #:params #:extra-headers) :
+  Access a server's protected resource @var{url} with the access @var{token}
+  previously obtained.
+
+  - *#:method* : the HTTP method to request the access token (defaults to
+    *'GET*).
+
+  - *#:params* : a list of additional parameters.
+
+  - *#:extra-headers* : a list of additional HTTP headers.
+
+  **Returns** : a couple of values, the response and the body (as a string).
 
 ## Helpers
 
@@ -88,6 +216,10 @@ guile-oauth, for example:
   given *str* string of name/value pairs as defined by the content type
   application/x-www-form-urlencoded and returns and association list. The keys
   and values in the association list are strings.
+
+- (**oauth-http-basic-auth** username password) : Create an HTTP basic
+  authorization credentials header. If username or password are false returns
+  nil.
 
 - (**make-oauth1-credentials** key secret) : Creates new client credentials.
 
@@ -108,8 +240,9 @@ guile-oauth, for example:
 - (**oauth1-response-params** response) : Returns additional parameters
   returns by the service provider.
 
+# Examples
 
-## Example: Twitter client
+## OAuth 1.0a: Twitter client
 
 The following example details how to obtain the tweets of your Twitter home
 timeline. The complete example is available as a web application under the
@@ -143,7 +276,7 @@ timeline. The complete example is available as a web application under the
 - Connect to the following returned URL for authorizing the request token:
 
 ```
-> (oauth1-client-authorize-url authorize-url request-token)
+> (oauth1-client-authorization-url authorize-url request-token)
 ```
 
   Here you will need to login to Twitter or simply authorize your
@@ -161,7 +294,7 @@ timeline. The complete example is available as a web application under the
 - Get your tweets:
 
 ```
-> (oauth1-client-request home-timeline credentials access-token)
+> (oauth1-client-http-request home-timeline credentials access-token)
 ```
 
 # License
