@@ -60,7 +60,7 @@ additional parameters can be given in @var{params}."
     (oauth1-request-sign request credentials response #:signature signature)
     (receive (response body)
         (oauth1-http-request request)
-      (oauth1-http-body->response body))))
+      (oauth1-http-body->response response body))))
 
 (define* (oauth1-client-authorization-url url
                                           #:optional (response #f)
@@ -98,7 +98,7 @@ can be provided."
     (oauth1-request-sign request credentials response #:signature signature)
     (receive (response body)
         (oauth1-http-request request #:extra-headers extra-headers)
-      (oauth1-http-body->response body))))
+      (oauth1-http-body->response response body))))
 
 (define* (oauth1-client-request url credentials response
                                 #:key

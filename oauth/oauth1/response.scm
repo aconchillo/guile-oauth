@@ -41,7 +41,7 @@
   (secret oauth1-response-token-secret)
   (params oauth1-response-params))
 
-(define (oauth1-http-body->response body)
+(define (oauth1-http-body->response response body)
   "Create a service response record from the given HTTP response
 @var{body}. The service response includes the token, the token secret and
 might include additional parameters defined by the service provider. The token
@@ -58,7 +58,7 @@ not it will display a warning."
                (secret (assoc-ref params "oauth_token_secret"))
                (callback-confirmed (assoc-ref params "oauth_callback_confirmed")))
           (unless (and token secret)
-            (throw 'oauth-invalid-response str-body))
+            (throw 'oauth-invalid-response response))
           (unless (and callback-confirmed (string=? callback-confirmed "true"))
             (warn "Missing oauth_callback_confirmed=true in response as required by OAuth1.0a."))
           ;; Only leave optional parameters in params alist.
@@ -66,6 +66,6 @@ not it will display a warning."
           (set! params (assoc-remove! params "oauth_token_secret"))
           (set! params (assoc-remove! params "oauth_callback_confirmed"))
           (make-oauth1-response token secret params)))
-      (lambda _ (throw 'oauth-invalid-response str-body)))))
+      (lambda _ (throw 'oauth-invalid-response response)))))
 
 ;;; (oauth oauth1 response) ends here
