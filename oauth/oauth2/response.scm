@@ -24,6 +24,7 @@
 ;;; Code:
 
 (define-module (oauth oauth2 response)
+  #:use-module (rnrs bytevectors)
   #:use-module (json)
   #:export (oauth2-http-body->token))
 
