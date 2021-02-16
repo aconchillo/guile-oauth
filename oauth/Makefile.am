@@ -19,7 +19,7 @@
 # along with guile-oauth. If not, see https://www.gnu.org/licenses/.
 #
 
-SUBDIRS = oauth1
+SUBDIRS = oauth1 oauth2
 
 moddir = $(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)/oauth
 objdir = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache/oauth

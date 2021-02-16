@@ -1,7 +1,7 @@
 #
 # Makefile.am
 #
-# Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2013-2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -26,6 +26,7 @@ SOURCES = \
   client.scm \
   credentials.scm \
   request.scm \
+  response.scm \
   signature.scm \
   utils.scm \
   #
