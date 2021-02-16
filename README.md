@@ -1,11 +1,14 @@
 
 # guile-oauth
 
-guile-oauth is a simple OAuth client module for Guile. It supports the
-following features:
+guile-oauth is an OAuth client module for Guile. It supports the following
+features:
 
-- [OAuth 1.0a](https://oauth.net/core/1.0a/) protocol support with HMAC-SHA1
-  and PLAINTEXT signatures.
+- [OAuth 1.0a](https://oauth.net/1/): HMAC-SHA1 and PLAINTEXT
+  signatures.
+
+- [OAuth 2.0](https://oauth.net/2/): Authorization Code and
+  Client Credentials grant types.
 
 It depends on the following Guile version and modules:
 
@@ -31,13 +34,13 @@ Then, run the typical sequence:
     $ make
     $ sudo make install
 
-Where <guile-prefix> should preferably be the same as your system Guile
+Where `<guile-prefix>` should preferably be the same as your system Guile
 installation directory (e.g. /usr).
 
 If everything installed successfully you should be up and running:
 
     $ guile
-    scheme@(guile-user)> (use-modules (oauth oauth1))
+    scheme@(guile-user)> (use-modules (oauth oauth2))
     scheme@(guile-user)>
 
 It might be that you installed guile-oauth somewhere differently than
@@ -52,7 +55,8 @@ guile-oauth, for example:
 ## OAuth 1.0a
 
 - (**oauth1-client-request-token** url credentials) : Obtain a request token
-  from the server *url* for the given client *credentials*.
+  from the server *url* for the given client *credentials* (see
+  *make-oauth1-credentials*).
 
   **Returns** : a service reponse that includes the request token.
 
@@ -70,9 +74,10 @@ guile-oauth, for example:
   **Returns** : an authorization URL the client should connect to in order to
   grant permissions and obtain a verification code.
 
-- (**oauth1-client-access-token** url credentials response verifier #:method
-  #:extra-headers #:signature) : Obtain an access token from the server *url*
-  for the given client *credentials*, request token *response* and *verifier*.
+- (**oauth1-client-access-token** url credentials request-token verifier
+  #:method #:extra-headers #:signature) : Obtain an access token from the server
+  *url* for the given client *credentials*, *request-token* response and
+  *verifier*.
 
   - *#:method* : the HTTP method to request the access token (defaults to
     *'POST*).
@@ -90,8 +95,8 @@ guile-oauth, for example:
     server. It includes the response and body as arguments.
 
 - (**oauth1-client-http-request** url credentials access-token) : Access a
-  server's protected resource url with the given client credentials and a
-  *access-token* response.
+  server's protected resource *url* with the given client *credentials* and the
+  previously obtined *access-token* response.
 
   - *#:method* : the HTTP method to request the access token (defaults to
     *'GET*).
@@ -108,11 +113,11 @@ guile-oauth, for example:
 ## OAuth 2.0
 
 - (**oauth2-client-authorization-url** url client-id #:redirect-uri #:scopes
-  #:params) : Returns a complete authorization URL given the server url and the
-  client ID.
+  #:params) : Returns a complete authorization URL given the server *url* and
+  the *client-id*.
 
   - *#:redirect-uri* : the URL the user should be redirected after the user
-     authorizes the application.
+    authorizes the application.
 
   - *#:scopes* : a list of scopes (given as strings).
 
@@ -130,7 +135,7 @@ guile-oauth, for example:
   - *#:client-id* : the client ID.
 
   - *#:redirect-uri* : the URL the user was redirected after the user authorizes
-     the application.
+    the application.
 
   - *#:method* : the HTTP method to request the access token (defaults to
     *'POST*).
@@ -157,7 +162,7 @@ guile-oauth, for example:
   - *client-secret* : the client secret.
 
   - *#:auth-type* : the authentication method to use (*'header* or *'params*,
-     defaults to *'header*).
+    defaults to *'header*).
 
   - *#:method* : the HTTP method to request the access token (defaults to
     *'POST*).
@@ -182,7 +187,7 @@ guile-oauth, for example:
   - *#:client-secret* : the client secret.
 
   - *#:auth-type* : the authentication method to use (*'header* or *'params*,
-     defaults to *'header*).
+    defaults to *'header*).
 
   - *#:method* : the HTTP method to request the access token (defaults to
     *'POST*).
@@ -207,7 +212,7 @@ guile-oauth, for example:
   - *#:client-secret* : the client secret.
 
   - *#:auth-type* : the authentication method to use (*'header* or *'params*,
-     defaults to *'header*).
+    defaults to *'header*).
 
   - *#:method* : the HTTP method to request the access token (defaults to
     *'POST*).
@@ -218,9 +223,9 @@ guile-oauth, for example:
 
   **Returns** : an access token.
 
-- (**oauth2-client-http-request** url token #:method #:params #:extra-headers) :
-  Access a server's protected resource @var{url} with the access @var{token}
-  previously obtained.
+- (**oauth2-client-http-request** url access-token #:method #:params
+  #:extra-headers) : Access a server's protected resource @var{url} with the
+  @var{access-token} previously obtained.
 
   - *#:method* : the HTTP method to request the access token (defaults to
     *'GET*).
@@ -260,6 +265,7 @@ guile-oauth, for example:
 
 - (**oauth1-response-params** response) : Returns additional parameters
   returns by the service provider.
+
 
 # Examples
 
