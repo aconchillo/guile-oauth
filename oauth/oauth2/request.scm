@@ -40,8 +40,8 @@ type (e.g. bearer or mac)."
       (throw 'oauth-invalid-token token))
     (cond
      ((string=? token-type "bearer")
-      (parse-header 'authorization
-                    (string-append "bearer " access-token)))
+      (let ((bearer (string-append "bearer " access-token)))
+        `((authorization . ,(parse-header 'authorization bearer)))))
      (else (throw 'oauth-invalid-token token)))))
 
 ;;

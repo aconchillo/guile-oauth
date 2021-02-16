@@ -147,7 +147,8 @@ parameters @var{params} can be provided as an alist, as well as a list of
 
 (define* (oauth2-client-http-request url token
                                      #:key
-                                     (method 'GET) (params '()) (extra-headers '()))
+                                     (method 'GET) (params '())
+                                     (extra-headers '()))
   "Access a server's protected resource @var{url} with the access @var{token}
 previously obtained. Returns two values, the response and the body as a
 string. An HTTP method can be selected with @var{method}, additional parameters
