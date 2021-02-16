@@ -24,7 +24,6 @@
 ;;; Code:
 
 (define-module (oauth oauth1 signature)
-  #:use-module (oauth oauth1 credentials)
   #:use-module (rnrs bytevectors)
   #:use-module (srfi srfi-9)
   #:use-module (web uri)
@@ -46,22 +45,22 @@
 ;; HMAC-SHA1
 ;;
 
-(define (hmac-sha1-key credentials token)
-  (string-append (uri-encode (oauth1-credentials-secret credentials))
+(define (hmac-sha1-key client-secret token-secret)
+  (string-append (uri-encode client-secret)
                  "&"
-                 (uri-encode (oauth1-credentials-secret token))))
+                 (uri-encode token-secret)))
 
-(define (hmac-sha1-signature base-string credentials token)
-  (let ((key (hmac-sha1-key credentials token)))
+(define (hmac-sha1-signature base-string client-secret token-secret)
+  (let ((key (hmac-sha1-key client-secret token-secret)))
     (sign-data-base64 key base-string #:algorithm 'sha1)))
 
 (define oauth1-signature-hmac-sha1
   (oauth1-signature
    "HMAC-SHA1"
-   (lambda (base-string credentials token)
+   (lambda (base-string client-secret token-secret)
      ;; We don't (uri-encode) since this will be done once the Authorization
      ;; header is created.
-     (hmac-sha1-signature base-string credentials token))))
+     (hmac-sha1-signature base-string client-secret token-secret))))
 
 ;;
 ;; PLAINTEXT

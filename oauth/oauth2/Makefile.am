@@ -1,7 +1,7 @@
 #
 # Makefile.am
 #
-# Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -19,4 +19,23 @@
 # along with guile-oauth. If not, see https://www.gnu.org/licenses/.
 #
 
-EXTRA_DIST = oauth1/twitter.scm oauth2/reddit.scm
+moddir = $(datadir)/guile/site/$(GUILE_EFFECTIVE_VERSION)/oauth/oauth2
+objdir = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache/oauth/oauth2
+
+SOURCES = \
+  client.scm \
+  request.scm \
+  response.scm \
+  #
+
+GOBJECTS = $(SOURCES:%.scm=%.go)
+
+nobase_mod_DATA = $(SOURCES) $(NOCOMP_SOURCES) $(GOBJECTS)
+EXTRA_DIST = $(SOURCES) $(NOCOMP_SOURCES)
+
+CLEANFILES = $(GOBJECTS)
+
+GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
+SUFFIXES = .scm .go
+.scm.go:
+	$(top_builddir)/env $(GUILD) compile $(GUILE_TARGET) $(GUILE_WARNINGS) -o "$@" "$<"

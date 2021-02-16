@@ -1,6 +1,6 @@
-;;; (oauth oauth1 credentials) --- Guile OAuth 1.0 implementation.
+;;; (oauth oauth2) --- Guile OAuth 2.0 implementation.
 
-;; Copyright (C) 2013-2020 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -19,23 +19,23 @@
 
 ;;; Commentary:
 
-;; OAuth 1.0 module for Guile
+;; OAuth 2.0  module for Guile
 
 ;;; Code:
 
-(define-module (oauth oauth1 credentials)
-  #:use-module (oauth oauth1 utils)
-  #:use-module (rnrs bytevectors)
-  #:use-module (srfi srfi-9)
-  #:export (make-oauth1-credentials
-            oauth1-credentials?
-            oauth1-credentials-key
-            oauth1-credentials-secret))
+(define-module (oauth oauth2)
+  #:use-module (oauth oauth2 client)
+  #:use-module (oauth oauth2 request))
 
-(define-record-type <oauth1-credentials>
-  (make-oauth1-credentials key secret)
-  oauth1-credentials?
-  (key oauth1-credentials-key)
-  (secret oauth1-credentials-secret))
+(define-syntax re-export-modules
+  (syntax-rules ()
+    ((_ (mod ...) ...)
+     (begin
+       (module-use! (module-public-interface (current-module))
+                    (resolve-interface '(mod ...)))
+       ...))))
 
-;;; (oauth oauth1 credentials) ends here
+(re-export-modules (oauth oauth2 client)
+                   (oauth oauth2 request))
+
+;;; (oauth oauth2) ends here

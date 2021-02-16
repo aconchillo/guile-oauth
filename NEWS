@@ -1,4 +1,36 @@
 
+* Version 1.0.0 (Feb 15, 2021)
+
+  OAuth 1.0a:
+
+  - oauth1-client-request-token now throws 'oauth-invalid-response with two
+    arguments the response and the body.
+
+  - oauth1-credentials is now make-oauth1-credentials.
+
+  - oauth1-credentials-id is now oauth1-credentials-key.
+
+  - oauth1-client-request-token and oauth1-client-access-token now
+    return an oauth1-response record.
+
+  - oauth1-client-authorize-url has been renamed to
+    oauth1-client-authorization-url.
+
+  - oauth1-client-request has been renamed to oauth1-client-http-request.
+
+  - oauth1-client-authorization-url, oauth1-client-access-token and
+    oauth1-client-http-request now receive a service response record instead of
+    a token record.
+
+  - oauth1-client-http-request now returns two values the response and the body
+    as a string.
+
+  OAuth 2.0:
+
+  - Initial support for OAuth 2.0 with authorization code and client credentials
+    grant types.
+
+
 * Version 0.5.0 (Aug 13, 2020)
 
   - Compile with Guile 3.
