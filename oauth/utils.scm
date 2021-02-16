@@ -30,7 +30,6 @@
   #:use-module (web uri)
   #:use-module (gcrypt base64)
   #:export (oauth-http-basic-auth
-            oauth-generate-token
             oauth-query-params
             oauth-parse-www-form-urlencoded))
 
@@ -59,12 +58,6 @@ strings."
                  (uri-decode (substring piece (1+ equals)) #:encoding charset))
            (cons (uri-decode piece #:encoding charset) ""))))
    (string-split str #\&)))
-
-(define* (oauth-generate-token #:optional (length 30))
-  "Generate a random ASCII token of the given @var{length}."
-  (define (random-char _)
-    (string-ref ASCII_ALPHABET (random (string-length ASCII_ALPHABET))))
-  (list->string (list-tabulate length random-char)))
 
 (define (oauth-query-params params)
   "Returns a URL query (key1=value1&key2=value2...) string for the given

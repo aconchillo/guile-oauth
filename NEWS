@@ -1,4 +1,11 @@
 
+* Version 1.0.1 (Feb 16, 2021)
+
+  - Use (gcrypt random) to generate random state strings instead of Guile's
+    (random) without seeding.
+    (reported by Linus Björnstam)
+
+
 * Version 1.0.0 (Feb 15, 2021)
 
   OAuth 1.0a:

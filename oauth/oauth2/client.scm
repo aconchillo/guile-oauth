@@ -32,6 +32,7 @@
   #:use-module (rnrs bytevectors)
   #:use-module (web client)
   #:use-module (json)
+  #:use-module (gcrypt random)
   #:export (oauth2-client-authorization-url
             oauth2-client-access-token-from-code
             oauth2-client-access-token-from-credentials
@@ -61,7 +62,7 @@ otherwise ask the user to connect to it with a web browser."
       (oauth-request-add-param request 'redirect_uri redirect-uri))
     (when scopes
       (oauth-request-add-param request 'scope (string-join scopes " ")))
-    (let ((state (oauth-generate-token)))
+    (let ((state (random-token)))
       (oauth-request-add-param request 'state state)
       (values (oauth-request-http-url request) state))))
 
