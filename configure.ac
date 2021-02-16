@@ -36,8 +36,10 @@ GUILE_PKG([3.0 2.2])
 GUILE_PROGS
 GUILE_SITE_DIR
 
+GUILE_MODULE_REQUIRED([gcrypt base64])
 GUILE_MODULE_REQUIRED([gcrypt hmac])
 GUILE_MODULE_REQUIRED([gnutls])
+GUILE_MODULE_REQUIRED([json])
 
 dnl Guile prefix and libdir.
 GUILE_PREFIX=`$PKG_CONFIG --print-errors --variable=prefix guile-$GUILE_EFFECTIVE_VERSION`
