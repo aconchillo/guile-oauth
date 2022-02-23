@@ -1,9 +1,0 @@
-# -*- org -*-
-
-* TODO
-
-- Add more HTTP methods (PUT...).
-- Error checking.
-- RSA signatures.
-- Add OAuth 2.0 support.
-- Add API for servers.
