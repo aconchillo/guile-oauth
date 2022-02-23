@@ -1,6 +1,6 @@
 ;;; (oauth oauth1 client) --- Guile OAuth 1.0 implementation.
 
-;; Copyright (C) 2013-2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2022 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -45,11 +45,10 @@
                                       (params '())
                                       (signature oauth1-signature-hmac-sha1))
   "Obtain a request token from the server @var{url} for the given client
-@var{credentials} (key and secret). Takes one optional argument,
-@var{callback}, to set the callback URL that the server will redirect
-after authorization is completed, it defaults to 'oob' (no redirection
-is performed). An HTTP method can be selected with @var{method} and
-additional parameters can be given in @var{params}."
+@var{credentials}. Takes one optional argument, @var{callback}, to set the
+callback URL that the server will redirect after authorization is completed, it
+defaults to 'oob' (no redirection is performed). An HTTP method can be selected
+with @var{method} and additional parameters can be given in @var{params}."
   (let ((response (make-oauth1-response "" "" '()))
         (request (make-oauth-request url method params)))
     (oauth1-request-add-default-params request)
@@ -103,15 +102,17 @@ can be provided."
 (define* (oauth1-client-http-request url credentials response
                                      #:key
                                      (method 'GET)
+                                     (body #f)
                                      (params '())
                                      (extra-headers '())
                                      (signature oauth1-signature-hmac-sha1))
   "Access a server's protected resource @var{url} with the given client
-@var{credentials} (key and secret) and an access token @var{response}. Returns
-two values, the response and the body as a string. An HTTP method can be
-selected with @var{method}, additional parameters can be given in @var{params}
-as an alist and a list of @var{extra-headers} can be provided as well. Also, an
-optional @var{signature} algorithm can be specified."
+@var{credentials} and an access token @var{response}. Returns two values, the
+response and the body as a string. An HTTP method can be selected with
+@var{method}, and a request @var{body} can be provided as well, additional
+parameters can be given in @var{params} as an alist and a list of
+@var{extra-headers} can be provided as well. Also, an optional @var{signature}
+algorithm can be specified."
   (let ((request (make-oauth-request url method params)))
     (oauth1-request-add-default-params request)
     (oauth-request-add-param request
@@ -121,8 +122,8 @@ optional @var{signature} algorithm can be specified."
                              'oauth_consumer_key
                              (oauth1-credentials-key credentials))
     (oauth1-request-sign request credentials response #:signature signature)
-    (receive (response body)
-        (oauth1-http-request request #:extra-headers extra-headers)
-      (values response (if (string? body) body (utf8->string body))))))
+    (receive (response resp-body)
+        (oauth1-http-request request #:body body #:extra-headers extra-headers)
+      (values response (if (string? resp-body) resp-body (utf8->string resp-body))))))
 
 ;;; (oauth oauth1 client) ends here

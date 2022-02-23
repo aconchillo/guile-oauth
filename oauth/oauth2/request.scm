@@ -1,6 +1,6 @@
 ;;; (oauth oauth2 request) --- Guile OAuth 2.0 implementation.
 
-;; Copyright (C) 2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2021, 2022 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -48,12 +48,13 @@ type (e.g. bearer or mac)."
 ;; Request HTTP/HTTPS
 ;;
 
-(define* (oauth2-http-request request #:key (headers '()))
+(define* (oauth2-http-request request #:key (body #f) (headers '()))
   "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and parameters are
 already defined in the given @var{request} object."
   (let* ((request-url (oauth-request-http-url request)))
     (http-request (string->uri request-url)
                   #:method (oauth-request-method request)
+                  #:body body
                   #:headers headers)))
 
 ;;; (oauth oauth2 request) ends here

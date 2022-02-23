@@ -1,6 +1,6 @@
 ;;; (oauth oauth2 client) --- Guile OAuth 2.0 implementation.
 
-;; Copyright (C) 2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2021, 2022 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -48,7 +48,8 @@
 (define* (oauth2-client-authorization-url url client-id
                                           #:key
                                           (redirect-uri #f)
-                                          (scopes #f) (params '()))
+                                          (scopes #f)
+                                          (params '()))
   "Returns a couple of values: the complete authorization URL and the internally
 auto-generated state. The complete authorization URL is built from the given
 @var{url}, @var{client-id}, @var{redirect-uri}, a list of @var{scopes} and the
@@ -148,17 +149,21 @@ parameters @var{params} can be provided as an alist, as well as a list of
 
 (define* (oauth2-client-http-request url token
                                      #:key
-                                     (method 'GET) (params '())
+                                     (method 'GET)
+                                     (body #f)
+                                     (params '())
                                      (extra-headers '()))
   "Access a server's protected resource @var{url} with the access @var{token}
 previously obtained. Returns two values, the response and the body as a
-string. An HTTP method can be selected with @var{method}, additional parameters
-can be given via @var{params} as an alist and a list of @var{extra-headers} can
-also be specified."
+string. An HTTP method can be selected with @var{method}, and a request
+@var{body} can be provided as well, additional parameters can be given via
+@var{params} as an alist and a list of @var{extra-headers} can also be
+specified."
   (let ((request (make-oauth-request url method params))
         (auth (oauth2-http-auth-from-token token)))
     (receive (response body)
         (oauth2-http-request request
+                             #:body body
                              #:headers (append auth extra-headers))
       (values response (if (string? body) body (utf8->string body))))))
 
