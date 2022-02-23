@@ -1,4 +1,10 @@
 
+* Version 1.1.0 (Feb 22, 2022)
+
+  - Added #:body argument to oauth1-client-http-request and
+    oauth2-client-http-request.
+
+
 * Version 1.0.1 (Feb 16, 2021)
 
   - Use (gcrypt random) to generate random state strings instead of Guile's
