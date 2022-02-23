@@ -54,9 +54,24 @@ guile-oauth, for example:
 
 ## OAuth 1.0a
 
-- (**oauth1-client-request-token** url credentials) : Obtain a request token
-  from the server *url* for the given client *credentials* (see
-  *make-oauth1-credentials*).
+- (**oauth1-client-request-token** url credentials [callback] #:method #:params
+  #:signature) : Obtain a request token from the server *url* for the given
+  client *credentials*.
+
+  - *url* : server URL to obtain a request token from.
+
+  - *credentials* : client credentials (see *make-oauth1-credentials*).
+
+  - *callback* : optional callback URL that the server will redirect to after
+    authorization is completed (defaults to *oob*, no redirection).
+
+  - *#:method* : the HTTP method to request the access token (defaults to
+    *'POST*).
+
+  - *#:params* : a list of additional parameters.
+
+  - *#:signature* : the signature algorithm to use (defaults to
+    *oauth1-signature-hmac-sha1*).
 
   **Returns** : a service reponse that includes the request token.
 
@@ -69,6 +84,11 @@ guile-oauth, for example:
   complete authorization URL given the server *url* and the previously obtained
   *request-token* response.
 
+  - *url* : server URL to get the authorization URL from.
+
+  - *request-token* : optional previously obtained request token response
+    (defaults to *#f*).
+
   - *#:params* : a list of additional parameters.
 
   **Returns** : an authorization URL the client should connect to in order to
@@ -78,6 +98,15 @@ guile-oauth, for example:
   #:method #:extra-headers #:signature) : Obtain an access token from the server
   *url* for the given client *credentials*, *request-token* response and
   *verifier*.
+
+  - *url* : server URL to obtain an access token from.
+
+  - *credentials* : client credentials (see *make-oauth1-credentials*).
+
+  - *request-token* : this is the request token obtained with
+    *oauth1-client-request-token*.
+
+  - *verifier* : the verification code obtained from authorization URL.
 
   - *#:method* : the HTTP method to request the access token (defaults to
     *'POST*).
@@ -94,12 +123,21 @@ guile-oauth, for example:
   - *oauth-invalid-response* : if an unexpected response was returned from the
     server. It includes the response and body as arguments.
 
-- (**oauth1-client-http-request** url credentials access-token) : Access a
-  server's protected resource *url* with the given client *credentials* and the
-  previously obtined *access-token* response.
+- (**oauth1-client-http-request** url credentials access-token #:method #:body
+  #:params #:extra-headers #:signature) : Access a server's protected resource
+  *url* with the given client *credentials* and the previously obtained
+  *access-token* response.
+
+  - *url* : server URL resource to access.
+
+  - *credentials* : client credentials (see *make-oauth1-credentials*).
+
+  - *access-token* : the access token to access the protected resource.
 
   - *#:method* : the HTTP method to request the access token (defaults to
     *'GET*).
+
+  - *#:body* : the request body (defaults to *#f*).
 
   - *#:params* : a list of additional parameters.
 
@@ -115,6 +153,10 @@ guile-oauth, for example:
 - (**oauth2-client-authorization-url** url client-id #:redirect-uri #:scopes
   #:params) : Returns a complete authorization URL given the server *url* and
   the *client-id*.
+
+  - *url* : server URL to get the authorization URL from.
+
+  - *client-id*: the client public identifier.
 
   - *#:redirect-uri* : the URL the user should be redirected after the user
     authorizes the application.
@@ -132,7 +174,9 @@ guile-oauth, for example:
   #:method #:params #:auth #:extra-headers) : Obtain an access token from the
   server *url* for the given *code* using an Authorization Code grant.
 
-  - *#:client-id* : the client ID.
+  - *url* : server URL to obtain an access token from.
+
+  - *#:client-id* : the client public identifier.
 
   - *#:redirect-uri* : the URL the user was redirected after the user authorizes
     the application.
@@ -157,7 +201,9 @@ guile-oauth, for example:
   #:auth-type #:method #:params #:extra-headers) : Obtain an access token from
   the server *url* using a Client Credentials grant.
 
-  - *client-id* : the client ID.
+  - *url* : server URL to obtain an access token from.
+
+  - *#:client-id* : the client public identifier.
 
   - *client-secret* : the client secret.
 
@@ -179,10 +225,12 @@ guile-oauth, for example:
     server. It includes the response and body as arguments.
 
 - (**oauth2-client-refresh-token** url #:client-id #:client-secret #:auth-type
-  #:method #:params #:extra-headers) : Obtain an access token from the server
+  #:method #:params #:extra-headers) : Obtain a new access token from the server
   *url* using a Client Credentials grant.
 
-  - *#:client-id* : the client ID.
+  - *url* : server URL to obtain a refreshed access token from.
+
+  - *#:client-id* : the client public identifier.
 
   - *#:client-secret* : the client secret.
 
@@ -204,10 +252,12 @@ guile-oauth, for example:
     server. It includes the response and body as arguments.
 
 - (**oauth2-client-refresh-token** url #:client-id #:client-secret #:auth-type
-  #:method #:params #:extra-headers) : Obtain an access token from the server
+  #:method #:params #:extra-headers) : Obtain a new access token from the server
   *url* using a Client Credentials grant.
 
-  - *#:client-id* : the client ID.
+  - *url* : server URL to obtain a refreshed access token from.
+
+  - *#:client-id* : the client public identifier.
 
   - *#:client-secret* : the client secret.
 
@@ -223,12 +273,18 @@ guile-oauth, for example:
 
   **Returns** : an access token.
 
-- (**oauth2-client-http-request** url access-token #:method #:params
+- (**oauth2-client-http-request** url access-token #:method #:body #:params
   #:extra-headers) : Access a server's protected resource @var{url} with the
   @var{access-token} previously obtained.
 
+  - *url* : server URL resource to access.
+
+  - *access-token* : the access token to access the protected resource.
+
   - *#:method* : the HTTP method to request the access token (defaults to
     *'GET*).
+
+  - *#:body* : the request body (defaults to *#f*).
 
   - *#:params* : a list of additional parameters.
 
@@ -365,7 +421,7 @@ available as a web application under the *examples* directory.
 
 # License
 
-Copyright (C) 2013-2020 Aleix Conchillo Flaqué <aconchillo@gmail.com>
+Copyright (C) 2013-2022 Aleix Conchillo Flaqué <aconchillo@gmail.com>
 
 guile-oauth is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
