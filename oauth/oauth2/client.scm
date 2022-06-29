@@ -53,8 +53,9 @@
   "Returns a couple of values: the complete authorization URL and the internally
 auto-generated state. The complete authorization URL is built from the given
 @var{url}, @var{client-id}, @var{redirect-uri}, a list of @var{scopes} and the
-state. A web application can then automatically redirect to the returned URL
-otherwise ask the user to connect to it with a web browser."
+state. An additional list of query @var{params} can also be specified. A web
+application can then automatically redirect to the returned URL otherwise ask
+the user to connect to it with a web browser."
   (let ((request (make-oauth-request url 'GET params)))
     (oauth-request-add-params request
                               `((response_type . "code")
@@ -162,14 +163,14 @@ to authenticate this request using the authentication method specified in
   "Access a server's protected resource @var{url} with the access @var{token}
 previously obtained. Returns two values, the response and the body as a
 string. An HTTP method can be selected with @var{method}, and a request
-@var{body} can be provided as well, an additional list of @var{extra-headers}
-can also be specified."
+@var{body} can be provided as well, an additional list of query @var{params} and
+@var{extra-headers} can also be specified."
   (let ((request (make-oauth-request url method params))
         (auth (oauth2-http-auth-from-token token)))
     (receive (response body)
-        (oauth2-http-request request
-                             #:body body
-                             #:headers (append auth extra-headers))
+        (oauth2-http-request-with-query request
+                                        #:body body
+                                        #:headers (append auth extra-headers))
       (values response (if (string? body) body (utf8->string body))))))
 
 ;;; (oauth oauth2 client) ends here

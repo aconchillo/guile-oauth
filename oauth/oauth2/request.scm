@@ -29,7 +29,8 @@
   #:use-module (web http)
   #:use-module (web uri)
   #:export (oauth2-http-auth-from-token
-            oauth2-http-request))
+            oauth2-http-request
+            oauth2-http-request-with-query))
 
 (define (oauth2-http-auth-from-token token)
   "Create HTTP authorization credentials depending on the specified @var{token}
@@ -49,12 +50,20 @@ type (e.g. bearer or mac)."
 ;;
 
 (define* (oauth2-http-request request #:key (body #f) (headers '()))
-  "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and parameters are
-already defined in the given @var{request} object."
-  (let* ((request-url (oauth-request-url-with-query request)))
+  "Perform an HTTP (or HTTPS) @var{request}. The HTTP method is already defined in
+the given @var{request} object. The HTTP query parameters won't be used in this
+request."
+  (let* ((request-url (oauth-request-url request)))
     (http-request (string->uri request-url)
                   #:method (oauth-request-method request)
                   #:body body
                   #:headers headers)))
+
+(define* (oauth2-http-request-with-query request #:key (body #f) (headers '()))
+  "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and parameters are
+already defined in the given @var{request} object. The parameters will be added
+to the query."
+  (let* ((request-url (oauth-request-url-with-query request)))
+    (oauth2-http-request request #:body body #:headers headers)))
 
 ;;; (oauth oauth2 request) ends here
