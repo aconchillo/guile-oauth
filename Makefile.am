@@ -1,7 +1,7 @@
 #
 # Makefile.am
 #
-# Copyright (C) 2013-2018 Aleix Conchillo Flaque <aconchillo@gmail.com>
+# Copyright (C) 2013-2022 Aleix Conchillo Flaque <aconchillo@gmail.com>
 #
 # This file is part of guile-oauth.
 #
@@ -25,5 +25,3 @@ ACLOCAL_AMFLAGS = -I build-aux
 
 dist-hook:
 	$(SHELL) $(top_srcdir)/ChangeLog > $(top_distdir)/ChangeLog
-
-EXTRA_DIST = TODO
