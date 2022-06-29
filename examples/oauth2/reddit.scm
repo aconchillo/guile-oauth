@@ -3,7 +3,7 @@
 
 ;;; Guile OAuth client example.
 
-;; Copyright (C) 2013-2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2022 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -69,24 +69,24 @@
   `(div (@ (class "ui centered page grid"))
         (div (@ (class "ten wide column"))
              (form (@ (class "ui form")
-                         (method "POST")
-                         (action "http://127.0.0.1:8080/reddit/auth"))
-                      (div (@ (class "field"))
-                           (label (@ (for "client_id")) "Client ID: ")
-                           (input (@ (name "client_id") (type "text") (size "50")
-                                     (value ""))))
-                      (div (@ (class "field"))
-                           (label (@ (for "secret")) "Client secret: ")
-                           (input (@ (name "secret") (type "text") (size "50")
-                                     (value ""))))
-                      (button (@ (class "ui button") (type "submit")) "Go Reddit!")))))
+                      (method "POST")
+                      (action "http://127.0.0.1:8080/reddit/auth"))
+                   (div (@ (class "field"))
+                        (label (@ (for "client_id")) "Client ID: ")
+                        (input (@ (name "client_id") (type "text") (size "50")
+                                  (value ""))))
+                   (div (@ (class "field"))
+                        (label (@ (for "secret")) "Client secret: ")
+                        (input (@ (name "secret") (type "text") (size "50")
+                                  (value ""))))
+                   (button (@ (class "ui button") (type "submit")) "Go Reddit!")))))
 
 (define (reddit-main-form request body)
   `(html
     (head (title ,title)
           (script (@ (src "https://code.jquery.com/jquery-3.1.1.min.js")
-                       (integrity "sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=")
-                       (crossorigin "anonymous")) "")
+                     (integrity "sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=")
+                     (crossorigin "anonymous")) "")
           (script (@ (src "https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.6/semantic.min.js")) "")
           (link (@ (rel "stylesheet")
                    (href "https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.6/semantic.min.css"))))
@@ -104,8 +104,8 @@
     (set! *client-id* (assoc-ref params "client_id"))
     (set! *client-secret* (assoc-ref params "secret"))
     (oauth2-client-authorization-url *reddit-auth-url* *client-id*
-                                   #:redirect-uri *redirect-uri*
-                                   #:scopes '("identity" "mysubreddits" "read"))))
+                                     #:redirect-uri *redirect-uri*
+                                     #:scopes '("identity" "mysubreddits" "read"))))
 
 (define (reddit-auth-handler request body)
   (values (build-response
@@ -120,10 +120,10 @@
          (params (oauth-parse-www-form-urlencoded query))
          (code (assoc-ref params "code")))
     (set! *access-token*
-      (oauth2-client-access-token-from-code *reddit-access-url* code
-                                            #:client-id *client-id*
-                                            #:redirect-uri *redirect-uri*
-                                            #:auth (oauth-http-basic-auth *client-id* *client-secret*)))
+          (oauth2-client-access-token-from-code *reddit-access-url* code
+                                                #:client-id *client-id*
+                                                #:redirect-uri *redirect-uri*
+                                                #:auth (oauth-http-basic-auth *client-id* *client-secret*)))
     (values (build-response
              #:code 302
              #:headers `((content-type . (text/html))
@@ -212,18 +212,18 @@
 ;; is valid, and if so it will call the right handler.
 (define (main-handler request body)
   (match (request-path-components request)
-   ;; /reddit
-   (("reddit") (reddit-main-form-handler request body))
-   ;; /reddit/auth
-   (("reddit" "auth") (reddit-auth-handler request body))
-   ;; /reddit/access
-   (("reddit" "access") (reddit-access-handler request body))
-   ;; /reddit/home
-   (("reddit" "home") (reddit-home-handler request body))
-   ;; /reddit/r/<subreddit>
-   (("reddit" "r" subreddit) (reddit-subreddit-handler request body subreddit))
-   ;; Resource not found (404)
-   (_ (not-found request))))
+    ;; /reddit
+    (("reddit") (reddit-main-form-handler request body))
+    ;; /reddit/auth
+    (("reddit" "auth") (reddit-auth-handler request body))
+    ;; /reddit/access
+    (("reddit" "access") (reddit-access-handler request body))
+    ;; /reddit/home
+    (("reddit" "home") (reddit-home-handler request body))
+    ;; /reddit/r/<subreddit>
+    (("reddit" "r" subreddit) (reddit-subreddit-handler request body subreddit))
+    ;; Resource not found (404)
+    (_ (not-found request))))
 
 (display "\nNow go to http://127.0.0.1:8080/reddit\n")
 

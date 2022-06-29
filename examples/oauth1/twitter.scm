@@ -3,7 +3,7 @@
 
 ;;; Guile OAuth client example.
 
-;; Copyright (C) 2013-2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2022 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -67,24 +67,24 @@
   `(div (@ (class "ui centered page grid"))
         (div (@ (class "ten wide column"))
              (form (@ (class "ui form")
-                         (method "POST")
-                         (action "http://127.0.0.1:8080/twitter/auth"))
-                      (div (@ (class "field"))
-                           (label (@ (for "key")) "Client key: ")
-                           (input (@ (name "key") (type "text") (size "50")
-                                     (value ""))))
-                      (div (@ (class "field"))
-                           (label (@ (for "secret")) "Client secret: ")
-                           (input (@ (name "secret") (type "text") (size "50")
-                                     (value ""))))
-                      (button (@ (class "ui button") (type "submit")) "Home timeline")))))
+                      (method "POST")
+                      (action "http://127.0.0.1:8080/twitter/auth"))
+                   (div (@ (class "field"))
+                        (label (@ (for "key")) "Client key: ")
+                        (input (@ (name "key") (type "text") (size "50")
+                                  (value ""))))
+                   (div (@ (class "field"))
+                        (label (@ (for "secret")) "Client secret: ")
+                        (input (@ (name "secret") (type "text") (size "50")
+                                  (value ""))))
+                   (button (@ (class "ui button") (type "submit")) "Home timeline")))))
 
 (define (twitter-main-form request body)
   `(html
     (head (title ,title)
           (script (@ (src "https://code.jquery.com/jquery-3.1.1.min.js")
-                       (integrity "sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=")
-                       (crossorigin "anonymous")) "")
+                     (integrity "sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=")
+                     (crossorigin "anonymous")) "")
           (script (@ (src "https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.6/semantic.min.js")) "")
           (link (@ (rel "stylesheet")
                    (href "https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.6/semantic.min.css"))))
@@ -100,16 +100,16 @@
 (define (twitter-authenticate)
   (let ((callback "http://127.0.0.1:8080/twitter/access"))
     (set! *request-token*
-      (oauth1-client-request-token *twitter-request-url*
-                                   *twitter-credentials*
-                                   callback))
+          (oauth1-client-request-token *twitter-request-url*
+                                       *twitter-credentials*
+                                       callback))
     (oauth1-client-authorization-url *twitter-auth-url* *request-token*)))
 
 (define (twitter-auth request body)
   (let ((params (oauth-parse-www-form-urlencoded (utf8->string body))))
     (set! *twitter-credentials*
-      (make-oauth1-credentials (assoc-ref params "key")
-                               (assoc-ref params "secret")))
+          (make-oauth1-credentials (assoc-ref params "key")
+                                   (assoc-ref params "secret")))
     (twitter-authenticate)))
 
 (define (twitter-auth-handler request body)
@@ -125,10 +125,10 @@
          (params (oauth-parse-www-form-urlencoded query))
          (verifier (assoc-ref params "oauth_verifier")))
     (set! *access-token*
-      (oauth1-client-access-token *twitter-access-url*
-                                  *twitter-credentials*
-                                  *request-token*
-                                  verifier))
+          (oauth1-client-access-token *twitter-access-url*
+                                      *twitter-credentials*
+                                      *request-token*
+                                      verifier))
     (values (build-response
              #:code 302
              #:headers `((content-type . (text/html))
@@ -148,12 +148,12 @@
       (body
        (div (@ (style "margin-top: 20px"))
             (h2 (@ (class "ui centered header"))
-             "(" (a (@ (href "http://127.0.0.1:8080/twitter/home_timeline"))
-                    "Home timeline")
-             ") "
-             "(" (a (@ (href "http://127.0.0.1:8080/twitter/user_timeline"))
-                    "User timeline")
-             ") "))
+                "(" (a (@ (href "http://127.0.0.1:8080/twitter/home_timeline"))
+                       "Home timeline")
+                ") "
+                "(" (a (@ (href "http://127.0.0.1:8080/twitter/user_timeline"))
+                       "User timeline")
+                ") "))
        (div (@ (style "margin-top: 20px") (class "ui centered page compact grid"))
             (div (@ (class "ui eight wide column segment"))
                  (div (@ (class "ui items vertically divided"))
@@ -209,18 +209,18 @@
 ;; is valid, and if so it will call the right handler.
 (define (main-handler request body)
   (match (request-path-components request)
-   ;; /twitter
-   (("twitter") (twitter-main-form-handler request body))
-   ;; /twitter/auth
-   (("twitter" "auth") (twitter-auth-handler request body))
-   ;; /twitter/access
-   (("twitter" "access") (twitter-access-handler request body))
-   ;; /twitter/home_timeline
-   (("twitter" "home_timeline") (twitter-home-timeline-handler request body))
-   ;; /twitter/user_timeline
-   (("twitter" "user_timeline") (twitter-user-timeline-handler request body))
-   ;; Resource not found (404)
-   (_ (not-found request))))
+    ;; /twitter
+    (("twitter") (twitter-main-form-handler request body))
+    ;; /twitter/auth
+    (("twitter" "auth") (twitter-auth-handler request body))
+    ;; /twitter/access
+    (("twitter" "access") (twitter-access-handler request body))
+    ;; /twitter/home_timeline
+    (("twitter" "home_timeline") (twitter-home-timeline-handler request body))
+    ;; /twitter/user_timeline
+    (("twitter" "user_timeline") (twitter-user-timeline-handler request body))
+    ;; Resource not found (404)
+    (_ (not-found request))))
 
 (display "\nNow go to http://127.0.0.1:8080/twitter\n")
 
