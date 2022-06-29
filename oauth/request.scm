@@ -1,6 +1,6 @@
 ;;; (oauth request) --- Guile OAuth implementation.
 
-;; Copyright (C) 2013-2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2013-2022 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -34,7 +34,7 @@
             oauth-request-param
             oauth-request-add-param
             oauth-request-add-params
-            oauth-request-http-url))
+            oauth-request-url-with-query))
 
 (define-record-type <oauth-request>
   (make-oauth-request url method params)
@@ -64,13 +64,13 @@ must be an association list."
       (oauth-request-add-param request (car param) (cdr param))
       (oauth-request-add-params request (cdr params))))))
 
-(define* (oauth-request-http-url request #:key (param-filter (lambda (_) #t)))
+(define* (oauth-request-url-with-query request #:key (param-filter (lambda (_) #t)))
   "Obtain the URL for the given @var{request}. The URI will contain all
 the @var{request} parameters that satisfy @var{param-filter} as URL
 query arguments."
   (let* ((url (oauth-request-url request))
          (params (filter param-filter (oauth-request-params request)))
-         (query-params (oauth-query-params params)))
+         (query-params (oauth-www-form-urlencoded params)))
     (string-append url (if (null? params) "" "?") query-params)))
 
 ;;; (oauth request) ends here

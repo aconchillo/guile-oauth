@@ -43,12 +43,15 @@
                                       #:key
                                       (method 'POST)
                                       (params '())
+                                      (params-location 'header)
                                       (signature oauth1-signature-hmac-sha1))
   "Obtain a request token from the server @var{url} for the given client
 @var{credentials}. Takes one optional argument, @var{callback}, to set the
 callback URL that the server will redirect after authorization is completed, it
 defaults to 'oob' (no redirection is performed). An HTTP method can be selected
-with @var{method} and additional parameters can be given in @var{params}."
+with @var{method} and additional parameters can be given in @var{params}. The
+@{params-location} can be the Authorization 'header (default), the 'query or the
+'body."
   (let ((response (make-oauth1-response "" "" '()))
         (request (make-oauth-request url method params)))
     (oauth1-request-add-default-params request)
@@ -58,7 +61,7 @@ with @var{method} and additional parameters can be given in @var{params}."
                              (oauth1-credentials-key credentials))
     (oauth1-request-sign request credentials response #:signature signature)
     (receive (response body)
-        (oauth1-http-request request)
+        (oauth1-http-request request #:params-location params-location)
       (oauth1-http-body->response response body))))
 
 (define* (oauth1-client-authorization-url url
@@ -73,18 +76,20 @@ browser."
       (oauth-request-add-param request
                                'oauth_token
                                (oauth1-response-token response)))
-    (oauth-request-http-url request)))
+    (oauth-request-url-with-query request)))
 
 (define* (oauth1-client-access-token url credentials response verifier
                                      #:key
                                      (method 'POST)
                                      (extra-headers '())
+                                     (params-location 'header)
                                      (signature oauth1-signature-hmac-sha1))
   "Obtain an access token from the server @var{url} for the given client
 @var{credentials} (key and secret), request token @var{response} and
 @var{verifier}. Access tokens are used to connect to protected resources. An
 HTTP method can be selected with @var{method} and additional @var{extra-headers}
-can be provided."
+can be provided. The @{params-location} can be the Authorization
+'header (default), the 'query or the 'body."
   (let ((request (make-oauth-request url method '())))
     (oauth1-request-add-default-params request)
     (oauth-request-add-param request
@@ -96,7 +101,9 @@ can be provided."
                              (oauth1-credentials-key credentials))
     (oauth1-request-sign request credentials response #:signature signature)
     (receive (response body)
-        (oauth1-http-request request #:extra-headers extra-headers)
+        (oauth1-http-request request
+                             #:params-location params-location
+                             #:extra-headers extra-headers)
       (oauth1-http-body->response response body))))
 
 (define* (oauth1-client-http-request url credentials response
@@ -104,6 +111,7 @@ can be provided."
                                      (method 'GET)
                                      (body #f)
                                      (params '())
+                                     (params-location 'header)
                                      (extra-headers '())
                                      (signature oauth1-signature-hmac-sha1))
   "Access a server's protected resource @var{url} with the given client
@@ -111,8 +119,9 @@ can be provided."
 response and the body as a string. An HTTP method can be selected with
 @var{method}, and a request @var{body} can be provided as well, additional
 parameters can be given in @var{params} as an alist and a list of
-@var{extra-headers} can be provided as well. Also, an optional @var{signature}
-algorithm can be specified."
+@var{extra-headers} can be provided as well. The @{params-location} can be the
+Authorization 'header (default), the 'query or the 'body. Also, an optional
+@var{signature} algorithm can be specified."
   (let ((request (make-oauth-request url method params)))
     (oauth1-request-add-default-params request)
     (oauth-request-add-param request
@@ -123,7 +132,10 @@ algorithm can be specified."
                              (oauth1-credentials-key credentials))
     (oauth1-request-sign request credentials response #:signature signature)
     (receive (response resp-body)
-        (oauth1-http-request request #:body body #:extra-headers extra-headers)
+        (oauth1-http-request request
+                             #:params-location params-location
+                             #:extra-headers extra-headers
+                             #:body body)
       (values response (if (string? resp-body) resp-body (utf8->string resp-body))))))
 
 ;;; (oauth oauth1 client) ends here

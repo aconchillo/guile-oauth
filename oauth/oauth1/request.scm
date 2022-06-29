@@ -1,3 +1,4 @@
+
 ;;; (oauth oauth1 request) --- Guile OAuth 1.0 implementation.
 
 ;; Copyright (C) 2013-2022 Aleix Conchillo Flaque <aconchillo@gmail.com>
@@ -29,6 +30,7 @@
   #:use-module (oauth oauth1 signature)
   #:use-module (oauth oauth1 utils)
   #:use-module (oauth request)
+  #:use-module (ice-9 match)
   #:use-module (web client)
   #:use-module (web uri)
   #:export (oauth1-request-add-default-params
@@ -49,10 +51,9 @@ are: oauth_version, oauth_timestamp and oauth_nonce."
        (oauth_nonce . ,(oauth1-nonce)))))
 
 (define (oauth1-request-http-headers request)
-  "Obtain the HTTP headers for the given @var{request}. This is the
-Authorization header with all the list of the OAuth @var{request}
-parameters."
-  (let* ((params (filter oauth1-param? (oauth-request-params request)))
+  "Obtain the HTTP headers for the given @var{request}. This is the Authorization
+header with all the list of the @var{request} parameters."
+  (let* ((params (oauth-request-params request))
          (header-params (oauth1-authorization-header-params params)))
     `((Authorization . ,(string-append "OAuth " header-params)))))
 
@@ -116,14 +117,35 @@ method."
 ;; Request HTTP/HTTPS
 ;;
 
-(define* (oauth1-http-request request #:key (body #f) (extra-headers '()))
+(define* (oauth1-http-request request
+                              #:key
+                              (params-location 'header)
+                              (extra-headers '())
+                              (body #f))
   "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and parameters are
-already defined in the given @var{request} object."
-  (let* ((request-url (oauth-request-http-url request #:param-filter (compose not oauth1-param?))))
-    (http-request (string->uri request-url)
-                  #:method (oauth-request-method request)
-                  #:body body
-                  #:headers (append (oauth1-request-http-headers request)
-                                    extra-headers))))
+already defined in the given @var{request} object. The parameters can be sent in
+the Authorization 'header (default), in the 'query or in the 'body. In a POST
+request, parameters can't be sent in the body otherwise an exception will be
+thrown."
+  (match params-location
+    ('header
+     (http-request (string->uri (oauth-request-url request))
+                   #:method (oauth-request-method request)
+                   #:body body
+                   #:headers (append (oauth1-request-http-headers request) extra-headers)))
+    ('query
+     (http-request (string->uri (oauth-request-url-with-query request))
+                   #:method (oauth-request-method request)
+                   #:body body
+                   #:headers extra-headers))
+    ('body
+     (let ((method (oauth-request-method request)))
+       (when (eq? method 'POST)
+         (throw 'oauth-invalid-request request))
+       (http-request (string->uri (oauth-request-url request))
+                     #:method method
+                     #:body body
+                     #:headers extra-headers)))
+    (_ (throw 'oauth-invalid-request request))))
 
 ;;; (oauth oauth1 request) ends here

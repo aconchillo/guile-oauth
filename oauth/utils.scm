@@ -1,6 +1,6 @@
 ;;; (oauth utils) --- Guile OAuth implementation.
 
-;; Copyright (C) 2021 Aleix Conchillo Flaque <aconchillo@gmail.com>
+;; Copyright (C) 2021-2022 Aleix Conchillo Flaque <aconchillo@gmail.com>
 ;;
 ;; This file is part of guile-oauth.
 ;;
@@ -30,7 +30,7 @@
   #:use-module (web uri)
   #:use-module (gcrypt base64)
   #:export (oauth-http-basic-auth
-            oauth-query-params
+            oauth-www-form-urlencoded
             oauth-parse-www-form-urlencoded))
 
 (define ASCII_ALPHABET "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -45,6 +45,17 @@ password are false returns nil."
       `((authorization . ,(parse-header 'authorization basic-auth)))))
    (else '())))
 
+(define (oauth-www-form-urlencoded params)
+  "Returns an 'application/x-www-form-urlencoded'
+string (key1=value1&key2=value2...) for the given @var{params} association
+list. Both keys and values will be encoded."
+  (string-join
+   (map (lambda (p) (string-append (uri-encode (symbol->string (car p)))
+                                   "="
+                                   (uri-encode (cdr p))))
+        params)
+   "&"))
+
 (define* (oauth-parse-www-form-urlencoded str #:optional (charset "utf-8"))
   "Parse the string @var{str} of name/value pairs as defined by the
 content type application/x-www-form-urlencoded and return and
@@ -58,15 +69,5 @@ strings."
                  (uri-decode (substring piece (1+ equals)) #:encoding charset))
            (cons (uri-decode piece #:encoding charset) ""))))
    (string-split str #\&)))
-
-(define (oauth-query-params params)
-  "Returns a URL query (key1=value1&key2=value2...) string for the given
-@var{params} association list. Both keys and values will be encoded."
-  (string-join
-   (map (lambda (p) (string-append (uri-encode (symbol->string (car p)))
-                                   "="
-                                   (uri-encode (cdr p))))
-        params)
-   "&"))
 
 ;;; (oauth utils) ends here

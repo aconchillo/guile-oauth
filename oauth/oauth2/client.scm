@@ -65,21 +65,19 @@ otherwise ask the user to connect to it with a web browser."
       (oauth-request-add-param request 'scope (string-join scopes " ")))
     (let ((state (random-token)))
       (oauth-request-add-param request 'state state)
-      (values (oauth-request-http-url request) state))))
+      (values (oauth-request-url-with-query request) state))))
 
 (define* (oauth2-client-access-token-from-code url code
                                                #:key
                                                (client-id #f) (redirect-uri #f)
-                                               (method 'POST) (params '())
                                                (auth '()) (extra-headers '()))
-  "Obtain an access token from the server @var{url} for the given @var{code}
-using an Authorization Code grant. Access tokens are used to connect to
-protected resources. The @var{code} is the value obtained after connecting to
-the authorization url. Optional @var{client-id}, @var{redirect-uri},
-authorization header @var{auth} (e.g.  @var{oauth-http-basic-auth}), additional
-parameters @var{params} as an alist and a list of @var{extra-headers} can be
-provided. An HTTP method can also be selected with @var{method}."
-  (let ((request (make-oauth-request url method params)))
+  "Obtain an access token from the server @var{url} for the given @var{code} using
+an Authorization Code grant. Access tokens are used to connect to protected
+resources. The @var{code} is the value obtained after connecting to the
+authorization url. Optional @var{client-id}, @var{redirect-uri}, authorization
+header @var{auth} (e.g.  @var{oauth-http-basic-auth}) and a list of
+@var{extra-headers} can be provided."
+  (let ((request (make-oauth-request url 'POST '())))
     (oauth-request-add-params request
                               `((grant_type . "authorization_code")
                                 (code . ,code)))
@@ -88,23 +86,25 @@ provided. An HTTP method can also be selected with @var{method}."
     (when redirect-uri
       (oauth-request-add-param request 'redirect_uri redirect-uri))
     (receive (response body)
-        (oauth2-http-request request
-                             #:headers (append auth extra-headers))
+        (let* ((req-body (oauth-www-form-urlencoded (oauth-request-params request)))
+               (content-headers `((content-type . (application/x-www-form-urlencoded))
+                                  (content-length . ,(string-utf8-length req-body)))))
+          (oauth2-http-request request
+                               #:body (string->utf8 req-body)
+                               #:headers (append auth content-headers extra-headers)))
       (oauth2-http-body->token response body))))
 
 (define* (oauth2-client-access-token-from-credentials url client-id client-secret
                                                       #:key
                                                       (auth-type 'header)
-                                                      (method 'POST) (params '())
                                                       (extra-headers '()))
-  "Obtain an access token from the server @var{url} for the given
-@var{client-id} and @var{client-secret} using a Client Credentials grant. the
-authentication method to provide the client ID and secret can be specified in
+  "Obtain an access token from the server @var{url} for the given @var{client-id}
+and @var{client-secret} using a Client Credentials grant. The authentication
+method to provide the client ID and secret can be specified in
 @var{auth-type} ('params or 'header, defaults to 'header). Access tokens are
-used to connect to protected resources. Optional parameters @var{params} can be
-provided as an alist, as well as a list of @var{extra-headers}. An HTTP method
-can be selected with @var{method}."
-  (let ((request (make-oauth-request url method params)))
+used to connect to protected resources. Optional @var{extra-headers} can be
+provided as an alist."
+  (let ((request (make-oauth-request url 'POST '())))
     (oauth-request-add-param request 'grant_type "client_credentials")
     (when (auth-type-params? auth-type)
       (oauth-request-add-params request
@@ -113,23 +113,25 @@ can be selected with @var{method}."
     (let ((auth (if (auth-type-header? auth-type)
                     (oauth-http-basic-auth client-id client-secret) '())))
       (receive (response body)
-        (oauth2-http-request request
-                             #:headers (append auth extra-headers))
-      (oauth2-http-body->token response body)))))
+          (let* ((req-body (oauth-www-form-urlencoded (oauth-request-params request)))
+                 (content-headers `((content-type . (application/x-www-form-urlencoded))
+                                    (content-length . ,(string-utf8-length req-body)))))
+            (oauth2-http-request request
+                                 #:body (string->utf8 req-body)
+                                 #:headers (append auth content-headers extra-headers)))
+        (oauth2-http-body->token response body)))))
 
 (define* (oauth2-client-refresh-token url token
                                       #:key
                                       (client-id #f) (client-secret #f)
                                       (auth-type 'header)
-                                      (method 'POST) (params '())
                                       (extra-headers '()))
-  "Refresh an access token from the server @var{url} with the previously
-obtained @var{token}. If needed, @var{client-id} and @var{client-secret} can be
-specified to authenticate this request using the authentication method specified
-in @var{auth-type} ('params or 'header, defaults to 'header). Optional
-parameters @var{params} can be provided as an alist, as well as a list of
-@var{extra-headers}. An HTTP method can be selected with @var{method}."
-  (let ((request (make-oauth-request url method params))
+  "Refresh an access token from the server @var{url} with the previously obtained
+@var{token}. If needed, @var{client-id} and @var{client-secret} can be specified
+to authenticate this request using the authentication method specified in
+@var{auth-type} ('params or 'header, defaults to 'header). Optional
+@var{extra-headers} can be provided as an alist."
+  (let ((request (make-oauth-request url 'POST '()))
         (refresh-token (assoc-ref token "refresh_token")))
     (unless refresh-token
       (throw 'oauth-invalid-token token))
@@ -143,9 +145,13 @@ parameters @var{params} can be provided as an alist, as well as a list of
     (let ((auth (if (auth-type-header? auth-type)
                     (oauth-http-basic-auth client-id client-secret) '())))
       (receive (response body)
-        (oauth2-http-request request
-                             #:headers (append auth extra-headers))
-      (oauth2-http-body->token response body)))))
+          (let* ((req-body (oauth-www-form-urlencoded (oauth-request-params request)))
+                 (content-headers `((content-type . (application/x-www-form-urlencoded))
+                                    (content-length . ,(string-utf8-length req-body)))))
+            (oauth2-http-request request
+                                 #:body (string->utf8 req-body)
+                                 #:headers (append auth content-headers extra-headers)))
+        (oauth2-http-body->token response body)))))
 
 (define* (oauth2-client-http-request url token
                                      #:key
@@ -156,9 +162,8 @@ parameters @var{params} can be provided as an alist, as well as a list of
   "Access a server's protected resource @var{url} with the access @var{token}
 previously obtained. Returns two values, the response and the body as a
 string. An HTTP method can be selected with @var{method}, and a request
-@var{body} can be provided as well, additional parameters can be given via
-@var{params} as an alist and a list of @var{extra-headers} can also be
-specified."
+@var{body} can be provided as well, an additional list of @var{extra-headers}
+can also be specified."
   (let ((request (make-oauth-request url method params))
         (auth (oauth2-http-auth-from-token token)))
     (receive (response body)

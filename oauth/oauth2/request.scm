@@ -39,7 +39,7 @@ type (e.g. bearer or mac)."
     (unless (and token-type access-token)
       (throw 'oauth-invalid-token token))
     (cond
-     ((string=? token-type "bearer")
+     ((string-ci=? token-type "bearer")
       (let ((bearer (string-append "bearer " access-token)))
         `((authorization . ,(parse-header 'authorization bearer)))))
      (else (throw 'oauth-invalid-token token)))))
@@ -51,7 +51,7 @@ type (e.g. bearer or mac)."
 (define* (oauth2-http-request request #:key (body #f) (headers '()))
   "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and parameters are
 already defined in the given @var{request} object."
-  (let* ((request-url (oauth-request-http-url request)))
+  (let* ((request-url (oauth-request-url-with-query request)))
     (http-request (string->uri request-url)
                   #:method (oauth-request-method request)
                   #:body body
