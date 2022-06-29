@@ -1,4 +1,18 @@
 
+* Version 1.2.0 (Jun 28, 2022)
+
+  OAuth 1.0a:
+
+  - Allows choosing where OAuth protocol parameters should be sent ('header,
+    'query, 'body) via the #:params-location keyword.
+
+  OAuth 2.0:
+
+  - Fixed access token request HTTP method. The spec requires the request to be
+    a POST instead of a GET, which means parameters need to be sent as
+    application/x-www-form-urlencoded.
+
+
 * Version 1.1.0 (Feb 22, 2022)
 
   - Added #:body argument to oauth1-client-http-request and
