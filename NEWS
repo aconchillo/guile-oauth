@@ -1,5 +1,11 @@
 
-* Version 1.2.0 (Jun 28, 2022)
+* Version 1.3.0 (Jun 29, 2022)
+
+  - Allow passing an HTTP request implementation via the #:http-proc keyword
+    argument.
+
+
+* Version 1.2.0 (Jun 29, 2022)
 
   OAuth 1.0a:
 
