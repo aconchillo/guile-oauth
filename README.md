@@ -55,8 +55,8 @@ guile-oauth, for example:
 ## OAuth 1.0a
 
 - (**oauth1-client-request-token** url credentials [callback] #:method #:params
-  #:params-location #:signature) : Obtain a request token from the server *url*
-  for the given client *credentials*.
+  #:params-location #:signature #:http-proc) : Obtain a request token from the
+  server *url* for the given client *credentials*.
 
   - *url* : server URL to obtain a request token from.
 
@@ -75,6 +75,9 @@ guile-oauth, for example:
 
   - *#:signature* : the signature algorithm to use (defaults to
     *oauth1-signature-hmac-sha1*).
+
+  - *#:http-proc* : a procedure to provide an HTTP request implementation
+    (defaults to *(http-request)*.
 
   **Returns** : a service reponse that includes the request token.
 
@@ -98,8 +101,8 @@ guile-oauth, for example:
   grant permissions and obtain a verification code.
 
 - (**oauth1-client-access-token** url credentials request-token verifier
-  #:method #:extra-headers #:params-location #:signature) : Obtain an access
-  token from the server *url* for the given client *credentials*,
+  #:method #:extra-headers #:params-location #:signature #:http-proc) : Obtain
+  an access token from the server *url* for the given client *credentials*,
   *request-token* response and *verifier*.
 
   - *url* : server URL to obtain an access token from.
@@ -122,6 +125,9 @@ guile-oauth, for example:
   - *#:signature* : the signature algorithm to use (defaults to
     *oauth1-signature-hmac-sha1*).
 
+  - *#:http-proc* : a procedure to provide an HTTP request implementation
+    (defaults to *(http-request)*.
+
   **Returns** : a service response that includes the access token.
 
   **Throws**
@@ -130,8 +136,8 @@ guile-oauth, for example:
     server. It includes the response and body as arguments.
 
 - (**oauth1-client-http-request** url credentials access-token #:method #:body
-  #:params #:params-location #:extra-headers #:signature) : Access a server's
-  protected resource *url* with the given client *credentials* and the
+  #:params #:params-location #:extra-headers #:signature #:http-proc) : Access a
+  server's protected resource *url* with the given client *credentials* and the
   previously obtained *access-token* response.
 
   - *url* : server URL resource to access.
@@ -154,6 +160,9 @@ guile-oauth, for example:
 
   - *#:signature* : the signature algorithm to use (defaults to
     *oauth1-signature-hmac-sha1*).
+
+  - *#:http-proc* : a procedure to provide an HTTP request implementation
+    (defaults to *(http-request)*.
 
   **Returns** : a couple of values, the response and the body (as a string).
 
@@ -180,8 +189,8 @@ guile-oauth, for example:
   authorization code.
 
 - (**oauth2-client-access-token-from-code** url code #:client-id #:redirect-uri
-  #:auth #:extra-headers) : Obtain an access token from the server *url* for the
-  given *code* using an Authorization Code grant.
+  #:auth #:extra-headers #:http-proc) : Obtain an access token from the server
+  *url* for the given *code* using an Authorization Code grant.
 
   - *url* : server URL to obtain an access token from.
 
@@ -197,6 +206,9 @@ guile-oauth, for example:
 
   - *#:extra-headers* : a list of additional HTTP headers.
 
+  - *#:http-proc* : a procedure to provide an HTTP request implementation
+    (defaults to *(http-request)*.
+
   **Returns** : an access token.
 
   **Throws**
@@ -205,8 +217,8 @@ guile-oauth, for example:
     server. It includes the response and body as arguments.
 
 - (**oauth2-client-access-token-from-credentials** url client-id client-secret
-  #:auth-type #:extra-headers) : Obtain an access token from the server *url*
-  using a Client Credentials grant.
+  #:auth-type #:extra-headers #:http-proc) : Obtain an access token from the
+  server *url* using a Client Credentials grant.
 
   - *url* : server URL to obtain an access token from.
 
@@ -219,6 +231,9 @@ guile-oauth, for example:
 
   - *#:extra-headers* : a list of additional HTTP headers.
 
+  - *#:http-proc* : a procedure to provide an HTTP request implementation
+    (defaults to *(http-request)*.
+
   **Returns** : an access token.
 
   **Throws**
@@ -227,9 +242,9 @@ guile-oauth, for example:
     server. It includes the response and body as arguments.
 
 - (**oauth2-client-refresh-token** url token #:client-id #:client-secret
-  #:auth-type #:extra-headers) : Refresh an access token from the server *url*
-  with the previously obtained access *token*. If needed, *client-id* and
-  *client-secret* can be specified to authenticate this request.
+  #:auth-type #:extra-headers #:http-proc) : Refresh an access token from the
+  server *url* with the previously obtained access *token*. If needed,
+  *client-id* and *client-secret* can be specified to authenticate this request.
 
   - *url* : server URL to obtain a refreshed access token from.
 
@@ -242,6 +257,9 @@ guile-oauth, for example:
 
   - *#:extra-headers* : a list of additional HTTP headers.
 
+  - *#:http-proc* : a procedure to provide an HTTP request implementation
+    (defaults to *(http-request)*.
+
   **Returns** : a new access token.
 
   **Throws**
@@ -250,8 +268,8 @@ guile-oauth, for example:
     server. It includes the response and body as arguments.
 
 - (**oauth2-client-http-request** url access-token #:method #:body #:params
-  #:extra-headers) : Access a server's protected resource @var{url} with the
-  @var{access-token} previously obtained.
+  #:extra-headers #:http-proc) : Access a server's protected resource @var{url}
+  with the @var{access-token} previously obtained.
 
   - *url* : server URL resource to access.
 
@@ -265,6 +283,9 @@ guile-oauth, for example:
   - *#:params* : a list of additional query parameters.
 
   - *#:extra-headers* : a list of additional HTTP headers.
+
+  - *#:http-proc* : a procedure to provide an HTTP request implementation
+    (defaults to *(http-request)*.
 
   **Returns** : a couple of values, the response and the body (as a string).
 

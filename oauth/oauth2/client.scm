@@ -70,14 +70,19 @@ the user to connect to it with a web browser."
 
 (define* (oauth2-client-access-token-from-code url code
                                                #:key
-                                               (client-id #f) (redirect-uri #f)
-                                               (auth '()) (extra-headers '()))
+                                               (client-id #f)
+                                               (redirect-uri #f)
+                                               (auth '())
+                                               (extra-headers '())
+                                               (http-proc http-request))
   "Obtain an access token from the server @var{url} for the given @var{code} using
 an Authorization Code grant. Access tokens are used to connect to protected
 resources. The @var{code} is the value obtained after connecting to the
 authorization url. Optional @var{client-id}, @var{redirect-uri}, authorization
 header @var{auth} (e.g.  @var{oauth-http-basic-auth}) and a list of
-@var{extra-headers} can be provided."
+@var{extra-headers} can be provided. Finally, an @var{http-proc} procedure can
+be specified to provide an HTTP request implementation (defaults
+to (http-request))."
   (let ((request (make-oauth-request url 'POST '())))
     (oauth-request-add-params request
                               `((grant_type . "authorization_code")
@@ -92,19 +97,22 @@ header @var{auth} (e.g.  @var{oauth-http-basic-auth}) and a list of
                                   (content-length . ,(string-utf8-length req-body)))))
           (oauth2-http-request request
                                #:body (string->utf8 req-body)
-                               #:headers (append auth content-headers extra-headers)))
+                               #:headers (append auth content-headers extra-headers)
+                               #:http-proc http-proc))
       (oauth2-http-body->token response body))))
 
 (define* (oauth2-client-access-token-from-credentials url client-id client-secret
                                                       #:key
                                                       (auth-type 'header)
-                                                      (extra-headers '()))
+                                                      (extra-headers '())
+                                                      (http-proc http-request))
   "Obtain an access token from the server @var{url} for the given @var{client-id}
 and @var{client-secret} using a Client Credentials grant. The authentication
 method to provide the client ID and secret can be specified in
 @var{auth-type} ('params or 'header, defaults to 'header). Access tokens are
 used to connect to protected resources. Optional @var{extra-headers} can be
-provided as an alist."
+provided as an alist. Finally, an @var{http-proc} procedure can be specified to
+provide an HTTP request implementation (defaults to (http-request))."
   (let ((request (make-oauth-request url 'POST '())))
     (oauth-request-add-param request 'grant_type "client_credentials")
     (when (auth-type-params? auth-type)
@@ -119,19 +127,23 @@ provided as an alist."
                                     (content-length . ,(string-utf8-length req-body)))))
             (oauth2-http-request request
                                  #:body (string->utf8 req-body)
-                                 #:headers (append auth content-headers extra-headers)))
+                                 #:headers (append auth content-headers extra-headers)
+                                 #:http-proc http-proc))
         (oauth2-http-body->token response body)))))
 
 (define* (oauth2-client-refresh-token url token
                                       #:key
                                       (client-id #f) (client-secret #f)
                                       (auth-type 'header)
-                                      (extra-headers '()))
+                                      (extra-headers '())
+                                      (http-proc http-request))
   "Refresh an access token from the server @var{url} with the previously obtained
 @var{token}. If needed, @var{client-id} and @var{client-secret} can be specified
 to authenticate this request using the authentication method specified in
 @var{auth-type} ('params or 'header, defaults to 'header). Optional
-@var{extra-headers} can be provided as an alist."
+@var{extra-headers} can be provided as an alist. Finally, an @var{http-proc}
+procedure can be specified to provide an HTTP request implementation (defaults
+to (http-request))."
   (let ((request (make-oauth-request url 'POST '()))
         (refresh-token (assoc-ref token "refresh_token")))
     (unless refresh-token
@@ -151,7 +163,8 @@ to authenticate this request using the authentication method specified in
                                     (content-length . ,(string-utf8-length req-body)))))
             (oauth2-http-request request
                                  #:body (string->utf8 req-body)
-                                 #:headers (append auth content-headers extra-headers)))
+                                 #:headers (append auth content-headers extra-headers)
+                                 #:http-proc http-proc))
         (oauth2-http-body->token response body)))))
 
 (define* (oauth2-client-http-request url token
@@ -159,18 +172,22 @@ to authenticate this request using the authentication method specified in
                                      (method 'GET)
                                      (body #f)
                                      (params '())
-                                     (extra-headers '()))
+                                     (extra-headers '())
+                                     (http-proc http-request))
   "Access a server's protected resource @var{url} with the access @var{token}
 previously obtained. Returns two values, the response and the body as a
 string. An HTTP method can be selected with @var{method}, and a request
 @var{body} can be provided as well, an additional list of query @var{params} and
-@var{extra-headers} can also be specified."
+@var{extra-headers} can also be specified. Finally, an @var{http-proc} procedure
+can be specified to provide an HTTP request implementation (defaults
+to (http-request))."
   (let ((request (make-oauth-request url method params))
         (auth (oauth2-http-auth-from-token token)))
     (receive (response body)
         (oauth2-http-request-with-query request
                                         #:body body
-                                        #:headers (append auth extra-headers))
+                                        #:headers (append auth extra-headers)
+                                        #:http-proc http-proc)
       (values response (if (string? body) body (utf8->string body))))))
 
 ;;; (oauth oauth2 client) ends here

@@ -121,7 +121,8 @@ method."
                               #:key
                               (params-location 'header)
                               (extra-headers '())
-                              (body #f))
+                              (body #f)
+                              (http-proc http-request))
   "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and parameters are
 already defined in the given @var{request} object. The parameters can be sent in
 the Authorization 'header (default), in the 'query or in the 'body. In a POST
@@ -129,23 +130,23 @@ request, parameters can't be sent in the body otherwise an exception will be
 thrown."
   (match params-location
     ('header
-     (http-request (string->uri (oauth-request-url request))
-                   #:method (oauth-request-method request)
-                   #:body body
-                   #:headers (append (oauth1-request-http-headers request) extra-headers)))
+     (http-proc (string->uri (oauth-request-url request))
+                #:method (oauth-request-method request)
+                #:body body
+                #:headers (append (oauth1-request-http-headers request) extra-headers)))
     ('query
-     (http-request (string->uri (oauth-request-url-with-query request))
-                   #:method (oauth-request-method request)
-                   #:body body
-                   #:headers extra-headers))
+     (http-proc (string->uri (oauth-request-url-with-query request))
+                #:method (oauth-request-method request)
+                #:body body
+                #:headers extra-headers))
     ('body
      (let ((method (oauth-request-method request)))
        (when (eq? method 'POST)
          (throw 'oauth-invalid-request request))
-       (http-request (string->uri (oauth-request-url request))
-                     #:method method
-                     #:body body
-                     #:headers extra-headers)))
+       (http-proc (string->uri (oauth-request-url request))
+                  #:method method
+                  #:body body
+                  #:headers extra-headers)))
     (_ (throw 'oauth-invalid-request request))))
 
 ;;; (oauth oauth1 request) ends here

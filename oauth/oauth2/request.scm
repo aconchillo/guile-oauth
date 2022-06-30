@@ -49,21 +49,29 @@ type (e.g. bearer or mac)."
 ;; Request HTTP/HTTPS
 ;;
 
-(define* (oauth2-http-request request #:key (body #f) (headers '()))
+(define* (oauth2-http-request request
+                              #:key
+                              (body #f)
+                              (headers '())
+                              (http-proc http-request))
   "Perform an HTTP (or HTTPS) @var{request}. The HTTP method is already defined in
 the given @var{request} object. The HTTP query parameters won't be used in this
 request."
   (let* ((request-url (oauth-request-url request)))
-    (http-request (string->uri request-url)
-                  #:method (oauth-request-method request)
-                  #:body body
-                  #:headers headers)))
+    (http-proc (string->uri request-url)
+               #:method (oauth-request-method request)
+               #:body body
+               #:headers headers)))
 
-(define* (oauth2-http-request-with-query request #:key (body #f) (headers '()))
+(define* (oauth2-http-request-with-query request
+                                         #:key
+                                         (body #f)
+                                         (headers '())
+                                         (http-proc http-request))
   "Perform an HTTP (or HTTPS) @var{request}. The HTTP method and parameters are
 already defined in the given @var{request} object. The parameters will be added
 to the query."
   (let* ((request-url (oauth-request-url-with-query request)))
-    (oauth2-http-request request #:body body #:headers headers)))
+    (oauth2-http-request request #:body body #:headers headers #:http-proc http-proc)))
 
 ;;; (oauth oauth2 request) ends here
