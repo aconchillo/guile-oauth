@@ -1,6 +1,9 @@
 
 # guile-oauth
 
+[![GNU Guile 2.0](https://github.com/aconchillo/guile-oauth/actions/workflows/guile2.2.yml/badge.svg)](https://github.com/aconchillo/guile-oauth/actions/workflows/guile2.2.yml)
+[![GNU Guile 3.0](https://github.com/aconchillo/guile-oauth/actions/workflows/guile3.0.yml/badge.svg)](https://github.com/aconchillo/guile-oauth/actions/workflows/guile3.0.yml)
+
 guile-oauth is an OAuth client module for Guile. It supports the following
 features:
 
